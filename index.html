@@ -2,8 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f6f3ec">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Dracula">
 <title>Dracula — Walk in the Shadows</title>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path fill="%230c0c11" d="M60 13 C46 4 24 8 6 20 Q17 18 28 27 Q38 23 48 31 Q54 28 60 36 Q66 28 72 31 Q82 23 92 27 Q103 18 114 20 C96 8 74 4 60 13 Z"/><path fill="%230c0c11" d="M53 12 L56 4 L59 9 L61 9 L64 4 L67 12 C63 15 57 15 53 12 Z"/></svg>'>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
@@ -26,13 +31,13 @@
     --sigHover: #1e1e26;
     /* Semantic light conditions */
     --c-night: #26304f;        /* night — midnight blue, unmistakably not graphite */
-    --c-shade: #2e2e38;        /* cast shadow — the signature */
+    --c-shade: #7d829d;        /* cast shadow as it appears on the map */
     --c-overcast: #93a1ad;     /* clouds shielding you — pewter */
     --c-sun: #e3a857;          /* direct sun — amber */
     --c-scorch: #c23b22;       /* super hot / extreme UV */
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bone); color: var(--text); height: 100vh; display: flex; overflow: hidden; }
+  body { font-family: Arial, Helvetica, sans-serif; background: var(--bone); color: var(--text); height: 100vh; display: flex; overflow: hidden; -webkit-tap-highlight-color: transparent; }
   #map { flex: 1; height: 100vh; background: #e8e4da; }
   .nightTiles .leaflet-tile-pane { filter: brightness(.55) saturate(.45); }
 
@@ -54,9 +59,9 @@
   /* Brand — house codes: geometric sans, extreme tracking, interlocked monogram, black on ivory */
   .brand { text-align: center; margin-bottom: 6px; }
   .brand svg { display: block; margin: 2px auto 8px; }
-  .brand h1 { font-family: "Avenir Next", Futura, "Century Gothic", "Arial Black", sans-serif; font-size: 1.72rem; font-weight: 800; letter-spacing: 0.3em; text-indent: 0.3em; color: var(--ink); }
+  .brand h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 2rem; font-weight: 600; letter-spacing: 0.2em; text-indent: 0.2em; color: var(--ink); }
   .brand .rule { height: 1px; background: var(--ink); opacity: 0.16; margin: 12px 30px 0; }
-  .tagline { font-family: Futura, "Avenir Next", "Century Gothic", "Trebuchet MS", sans-serif; text-transform: uppercase; letter-spacing: 0.24em; color: var(--muted); font-size: 0.6rem; text-align: center; margin: 10px 0 18px; }
+  .tagline { font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.24em; color: var(--muted); font-size: 0.6rem; text-align: center; margin: 10px 0 18px; }
 
   .card { background: var(--card); border: 1px solid var(--hairline); border-radius: 10px; padding: 15px 17px; margin-bottom: 14px; }
   .card h2 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.18em; color: var(--brass); margin-bottom: 10px; font-weight: 700; }
@@ -71,7 +76,7 @@
   button.secondary { background: transparent; color: var(--text); border: 1px solid var(--hairline); font-weight: 600; }
   button.secondary:hover { background: var(--bone2); border-color: var(--muted); }
   button.big { width: 100%; padding: 14px; font-size: 0.76rem; letter-spacing: 0.2em; }
-  .modeOn { background: var(--sig) !important; color: var(--bone) !important; border-color: var(--sig) !important; }
+  .modeOn { background: transparent !important; color: var(--ink) !important; border: 1.5px solid var(--ink) !important; font-weight: 800; }
   button:disabled { opacity: 0.45; cursor: default; }
   .btnrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .btnrow button { display: flex; align-items: center; justify-content: center; gap: 7px; flex: 1; }
@@ -84,8 +89,9 @@
 
   /* Time slider — track painted with the day's actual light */
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 12px; border-radius: 7px; background: var(--c-night); border: 1px solid var(--hairline); margin-top: 10px; }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--blood); border: 2.5px solid var(--bone); box-shadow: 0 1px 5px rgba(0,0,0,.35); cursor: pointer; }
-  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--blood); border: 2.5px solid var(--bone); cursor: pointer; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--sig); border: 2.5px solid var(--bone); box-shadow: 0 1px 5px rgba(0,0,0,.35); cursor: pointer; }
+  input[type=range]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--sig); border: 2.5px solid var(--bone); cursor: pointer; }
+  .timeOff { border-color: var(--c-sun) !important; box-shadow: 0 0 0 2px rgba(227,168,87,.3); }
   .timeRow { display: flex; align-items: baseline; justify-content: space-between; }
   .timeLabel { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.15rem; color: var(--ink); }
   .sunState { font-size: 0.78rem; color: var(--muted); }
@@ -156,13 +162,21 @@
   .sunIcon { filter: drop-shadow(0 2px 6px rgba(227,168,87,.6)); }
   @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
 
-  #errBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: var(--blood-deep); color: var(--bone); padding: 10px 16px; font: 600 14px -apple-system, sans-serif; }
+  #errBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: var(--blood-deep); color: var(--bone); padding: 10px 16px; font: 600 14px Arial, sans-serif; }
+
+  /* Navigation mode: the map takes over, Google-style */
+  body.navModeUI .brand, body.navModeUI .tagline, body.navModeUI .langRow, body.navModeUI .legend,
+  body.navModeUI #routeCard, body.navModeUI #lightCard, body.navModeUI #wxCard, body.navModeUI #routes,
+  body.navModeUI .footer, body.navModeUI #status { display: none; }
+  #navToggle { width: 100%; margin-top: 12px; background: var(--brass); color: #1a1512; }
+  #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
 
   /* Opening splash */
   #splash { position: fixed; inset: 0; z-index: 10000; background: var(--bone); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; animation: splashFade .55s ease 2.1s forwards; }
   #splash .em { animation: splashPop .9s cubic-bezier(.2,.8,.25,1) both; }
-  #splash h1 { font-family: "Avenir Next", Futura, "Century Gothic", "Arial Black", sans-serif; font-size: 1.9rem; font-weight: 800; letter-spacing: 0.34em; text-indent: 0.34em; color: var(--ink); animation: splashPop .9s cubic-bezier(.2,.8,.25,1) .15s both; }
-  #splash .tg { font-family: "Avenir Next", Futura, "Century Gothic", sans-serif; text-transform: uppercase; letter-spacing: 0.26em; color: var(--muted); font-size: 0.64rem; animation: splashPop .9s ease .35s both; }
+  #splash h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 2.3rem; font-weight: 600; letter-spacing: 0.22em; text-indent: 0.22em; color: var(--ink); animation: trackIn 1.2s cubic-bezier(.2,.8,.25,1) .15s both; }
+  @keyframes trackIn { from { letter-spacing: 0.04em; opacity: 0; } to { letter-spacing: 0.22em; opacity: 1; } }
+  #splash .tg { font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.26em; color: var(--muted); font-size: 0.64rem; animation: splashPop .9s ease .35s both; }
   @keyframes splashPop { 0% { opacity: 0; transform: scale(.92) translateY(6px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
   @keyframes splashFade { to { opacity: 0; visibility: hidden; } }
   #splash .bat { position: absolute; font-size: 19px; opacity: 0; animation: batFly 2.2s ease-in-out both; }
@@ -184,6 +198,11 @@
     body.sheetCollapsed .brand, body.sheetCollapsed .tagline, body.sheetCollapsed .langRow,
     body.sheetCollapsed #routeCard, body.sheetCollapsed #lightCard, body.sheetCollapsed .legend,
     body.sheetCollapsed #wxCard, body.sheetCollapsed .footer { display: none; }
+    body.navModeUI #sidebar { height: 24vh; }
+    body.navModeUI #map { height: 76vh; }
+    input[type=text] { font-size: 16px; } /* prevents iOS focus zoom */
+    button { min-height: 44px; }
+    .langBtn { min-height: 0; }
   }
 </style>
 </head>
@@ -194,15 +213,9 @@
   <span class="bat" style="left:18%;top:64%;animation-delay:.2s">🦇</span>
   <span class="bat" style="left:70%;top:30%;animation-delay:.45s;font-size:15px">🦇</span>
   <span class="bat" style="left:40%;top:20%;animation-delay:.7s;font-size:24px">🦇</span>
-  <svg class="em" width="110" height="104" viewBox="0 0 100 94" aria-hidden="true">
-    <path fill="#0c0c11" d="M50 88 C47 72 38 65 26 65 L8 46 C20 40 37 46 46 58 C48 61 49 63 50 66 C51 63 52 61 54 58 C63 46 80 40 92 46 L74 65 C62 65 53 72 50 88 Z"/>
-    <path fill="#0c0c11" d="M50 2 C35 2 26 14 26 31 C26 49 36 61 50 61 C64 61 74 49 74 31 C74 14 65 2 50 2 Z"/>
-    <path fill="#f7f3ea" d="M50 24 C46.5 15 37 14 32.5 20 C30.5 34 34.5 49 50 56 C65.5 49 69.5 34 67.5 20 C63 14 53.5 15 50 24 Z"/>
-    <path fill="#0c0c11" d="M36.5 30 L46.5 32.5 L38.5 35 Q36 33 36.5 30 Z"/>
-    <path fill="#0c0c11" d="M63.5 30 L53.5 32.5 L61.5 35 Q64 33 63.5 30 Z"/>
-    <path d="M43 42 Q50 46.6 57 42" stroke="#0c0c11" stroke-width="1.9" fill="none" stroke-linecap="round"/>
-    <path fill="#0c0c11" d="M45.4 43.4 L46.8 48.5 L48.5 44.2 Z"/>
-    <path fill="#0c0c11" d="M54.6 43.4 L53.2 48.5 L51.5 44.2 Z"/>
+  <svg class="em" width="150" height="92" viewBox="0 0 120 50" aria-hidden="true">
+    <path fill="#0c0c11" d="M60 14 C46 4 24 8 6 22 Q17 20 28 32 Q38 27 48 38 Q54 34 60 44 Q66 34 72 38 Q82 27 92 32 Q103 20 114 22 C96 8 74 4 60 14 Z"/>
+    <path fill="#0c0c11" d="M53 13 L56 4 L59 9.5 L61 9.5 L64 4 L67 13 C63 16.5 57 16.5 53 13 Z"/>
   </svg>
   <h1>DRACULA</h1>
   <div class="tg">Every street has a shadow</div>
@@ -225,26 +238,16 @@ window.addEventListener("DOMContentLoaded", function(){
 <div id="sidebar">
   <div id="sheetHandle" title="Show / hide controls"><span></span></div>
   <div class="brand">
-    <svg width="58" height="54" viewBox="0 0 100 94" aria-hidden="true" style="display:block;margin:0 auto 4px">
-      <!-- collar: sharp points sweeping up and out -->
-      <path fill="#0c0c11" d="M50 88 C47 72 38 65 26 65 L8 46 C20 40 37 46 46 58 C48 61 49 63 50 66 C51 63 52 61 54 58 C63 46 80 40 92 46 L74 65 C62 65 53 72 50 88 Z"/>
-      <!-- head -->
-      <path fill="#0c0c11" d="M50 2 C35 2 26 14 26 31 C26 49 36 61 50 61 C64 61 74 49 74 31 C74 14 65 2 50 2 Z"/>
-      <!-- face with widow's peak -->
-      <path fill="#f7f3ea" d="M50 24 C46.5 15 37 14 32.5 20 C30.5 34 34.5 49 50 56 C65.5 49 69.5 34 67.5 20 C63 14 53.5 15 50 24 Z"/>
-      <!-- sly slanted eyes -->
-      <path fill="#0c0c11" d="M36.5 30 L46.5 32.5 L38.5 35 Q36 33 36.5 30 Z"/>
-      <path fill="#0c0c11" d="M63.5 30 L53.5 32.5 L61.5 35 Q64 33 63.5 30 Z"/>
-      <!-- smirk with fangs -->
-      <path d="M43 42 Q50 46.6 57 42" stroke="#0c0c11" stroke-width="1.9" fill="none" stroke-linecap="round"/>
-      <path fill="#0c0c11" d="M45.4 43.4 L46.8 48.5 L48.5 44.2 Z"/>
-      <path fill="#0c0c11" d="M54.6 43.4 L53.2 48.5 L51.5 44.2 Z"/>
+    <svg width="72" height="44" viewBox="0 0 120 50" aria-hidden="true" style="display:block;margin:0 auto 2px">
+      <!-- wide span, sharp downward tips, deeper membrane scallops -->
+      <path fill="#0c0c11" d="M60 14 C46 4 24 8 6 22 Q17 20 28 32 Q38 27 48 38 Q54 34 60 44 Q66 34 72 38 Q82 27 92 32 Q103 20 114 22 C96 8 74 4 60 14 Z"/>
+      <path fill="#0c0c11" d="M53 13 L56 4 L59 9.5 L61 9.5 L64 4 L67 13 C63 16.5 57 16.5 53 13 Z"/>
     </svg>
     <h1>DRACULA</h1>
     <div class="rule"></div>
   </div>
   <div class="tagline" id="tagline">Every street has a shadow</div>
-  <div class="langRow"><button id="langEN" class="langBtn langOn">EN</button><span style="color:var(--hairline)">·</span><button id="langNL" class="langBtn">NL</button></div>
+  <div class="langRow"><button id="langEN" class="langBtn langOn">EN</button><span style="color:var(--hairline)">·</span><button id="langNL" class="langBtn">NL</button><span style="color:var(--hairline)">·</span><button id="langKO" class="langBtn">KO</button></div>
 
   <div class="legend" style="margin:0 0 14px">
     <span><span class="dot" style="background:var(--c-shade)"></span><span id="lgShadow">shadow</span></span>
@@ -258,6 +261,7 @@ window.addEventListener("DOMContentLoaded", function(){
     <div id="navText"></div>
     <div id="navSub"></div>
     <div class="navBarWrap"><div id="navBar"></div></div>
+    <button id="navToggle">Start</button>
   </div>
 
   <div class="card" id="routeCard">
@@ -267,7 +271,10 @@ window.addEventListener("DOMContentLoaded", function(){
       <input type="text" id="endInput" placeholder="Where are you going?" autocomplete="off">
       <div class="suggest" id="endSuggest" style="display:none"></div>
     </div>
-    <div class="fieldLabel" id="lblFrom">From</div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span class="fieldLabel" id="lblFrom">From</span>
+      <button id="swapBtn" class="langBtn" title="Swap start and destination" style="font-size:.95rem;padding:0 6px">⇅</button>
+    </div>
     <div class="inputWrap">
       <input type="text" id="startInput" placeholder="My location (automatic)" autocomplete="off">
       <div class="suggest" id="startSuggest" style="display:none"></div>
@@ -367,7 +374,8 @@ const state = {
 const speed = () => state.mode === "bike" ? 4.2 : 1.4; // m/s
 
 // ---------- Language (EN / NL) ----------
-state.lang = (navigator.language || "").toLowerCase().startsWith("nl") ? "nl" : "en";
+state.lang = (navigator.language || "").toLowerCase().startsWith("nl") ? "nl"
+           : (navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en";
 const STR = {
   en: {
     tagline: "Every street has a shadow",
@@ -409,9 +417,10 @@ const STR = {
     sunriseIn: (h, m) => `Sunrise in ${h ? h + "h " : ""}${m}m — enjoy it while it lasts`,
     moonLabel: p => `Moon · ${p}% lit`,
     moonTip: "The moon keeps watch — no UV, all shade, walk anywhere",
+    startNav: "Start", endNav: "End route",
     sunTip: d => `sun · ${d}° above the horizon — shadows fall away from me`,
     locating: "Locating you… (allow location access to begin)",
-    foundYou: "Found you 🧛 — where to?",
+    foundYou: "Found you 🧛🏻 — where to?",
     noLocation: "Location unavailable — showing New York. Allow location access and reload.",
     startSet: "Start set — now tap your destination.", destSet: "Destination set — find your route.",
     startSetShort: "Start set.", charting: "Charting routes…",
@@ -422,13 +431,13 @@ const STR = {
     noDataRoute: "No building data here — routes shown, but shade can't be computed.",
     readingShadows: "Reading the shadows here…",
     cleared: "Cleared. Where to next?", needBoth: "Where are you going? Type a destination or tap the map.",
-    centered: "Centered on you 🧛", locBusy: "Locating…",
+    centered: "Centered on you 🧛🏻", locBusy: "Locating…",
     locFail: "Couldn't get your location — check browser permission.",
     findStart: "Finding start address…", findDest: "Finding destination…",
     notFound: q => `Address not found: "${q}" — try adding the city.`,
-    myLocation: "🧛 My location",
-    offRoute: m => `You're <b>${m} m</b> from the route`, backLine: "Return to the shaded line 🧛",
-    arrived: "<b>Arrived.</b> 🧛", crypt: "Back to the crypt.",
+    myLocation: "🧛🏻 My location",
+    offRoute: m => `You're <b>${m} m</b> from the route`, backLine: "Return to the shaded line 🧛🏻",
+    arrived: "<b>Arrived.</b> 🧛🏻", crypt: "Back to the crypt.",
     remain: (m, km) => `<b>${m} min</b> · ${km} km left`,
     ahead: (s, p) => `~${s} min of direct sun ahead · ${p}% done`
   },
@@ -472,9 +481,10 @@ const STR = {
     sunriseIn: (h, m) => `Zonsopkomst over ${h ? h + "u " : ""}${m}m — geniet zolang het duurt`,
     moonLabel: p => `Maan · ${p}% verlicht`,
     moonTip: "De maan waakt — geen UV, alles schaduw, loop waar je wilt",
+    startNav: "Start", endNav: "Route stoppen",
     sunTip: d => `zon · ${d}° boven de horizon — schaduwen vallen van mij af`,
     locating: "Zoeken waar je bent… (sta locatietoegang toe)",
-    foundYou: "Gevonden 🧛 — waar ga je heen?",
+    foundYou: "Gevonden 🧛🏻 — waar ga je heen?",
     noLocation: "Locatie niet beschikbaar — New York wordt getoond. Sta locatietoegang toe en herlaad.",
     startSet: "Start gezet — tik nu je bestemming.", destSet: "Bestemming gezet — vind je route.",
     startSetShort: "Start gezet.", charting: "Routes uitzetten…",
@@ -485,15 +495,79 @@ const STR = {
     noDataRoute: "Geen gebouwdata hier — routes getoond, maar schaduw is niet te berekenen.",
     readingShadows: "De schaduwen hier lezen…",
     cleared: "Gewist. Waar ga je nu heen?", needBoth: "Waar ga je heen? Typ een bestemming of tik op de kaart.",
-    centered: "Gecentreerd op jou 🧛", locBusy: "Zoeken…",
+    centered: "Gecentreerd op jou 🧛🏻", locBusy: "Zoeken…",
     locFail: "Kan je locatie niet vinden — controleer je browserrechten.",
     findStart: "Startadres zoeken…", findDest: "Bestemming zoeken…",
     notFound: q => `Adres niet gevonden: "${q}" — voeg de stad toe.`,
-    myLocation: "🧛 Mijn locatie",
-    offRoute: m => `Je bent <b>${m} m</b> van de route`, backLine: "Terug naar de schaduwlijn 🧛",
-    arrived: "<b>Aangekomen.</b> 🧛", crypt: "Terug naar de crypte.",
+    myLocation: "🧛🏻 Mijn locatie",
+    offRoute: m => `Je bent <b>${m} m</b> van de route`, backLine: "Terug naar de schaduwlijn 🧛🏻",
+    arrived: "<b>Aangekomen.</b> 🧛🏻", crypt: "Terug naar de crypte.",
     remain: (m, km) => `<b>${m} min</b> · ${km} km te gaan`,
     ahead: (s, p) => `~${s} min volle zon te gaan · ${p}% gedaan`
+  },
+  ko: {
+    tagline: "모든 거리에는 그늘이 있다",
+    yourWalk: "경로", to: "도착", from: "출발",
+    endPh: "어디로 가세요?", startPh: "내 위치 (자동)",
+    walk: "도보", bike: "자전거", go: "그늘 경로 찾기",
+    locate: "내 위치", clear: "지우기",
+    mapTip: "팁: 지도를 탭해도 됩니다 — 첫 탭은 출발지, 두 번째 탭은 도착지.",
+    light: "빛", backNow: "지금으로", conditions: "현재 · 여기",
+    cloud: "구름", temp: "기온",
+    lgShadow: "그늘", lgSun: "직사광", lgOvercast: "흐림", lgNight: "밤",
+    nowWalking: "이동 중",
+    fastest: "최단 경로", shadeRoute: "그늘 경로", alternative: "대안 경로", badge: "드라큘라 경로",
+    dracRoute: "드라큘라 경로", alsoFastest: "가장 빠르기도 함",
+    inShadow: p => `<span class="shady"><b>${p}%</b> 그늘</span>`,
+    sunNight: "오늘 밤엔 해가 없어요",
+    sunOvercast: m => `${m}분 노출 — 하지만 구름이 가려줘요`,
+    sunOpen: (s, w) => `<span class="sunny">${w}분 중 <b>${s}분</b> 직사광</span>`,
+    yourPick: d => `내 선택 — 드라큘라 경로보다 햇빛 ${d}분 더`,
+    minMove: (m, bike) => `${bike ? "자전거" : "도보"} ${m}분`,
+    crossN: n => `↔ ${n}회 길 건너기`,
+    tapRoute: "경로를 탭하면 미리 볼 수 있어요 — 실선은 그늘진 인도를 따라갑니다. ○는 건너는 지점",
+    uvSub: (uv, night) => night ? "해가 없어 UV 없음" :
+      uv < 3 ? "낮음 — 서두를 필요 없음" : uv < 6 ? "보통 — 약 30분이면 피부가 탐" :
+      uv < 8 ? "높음 — 약 20분" : uv < 11 ? "매우 높음 — 약 10분" : "위험 — 수 분 내 화상",
+    cloudSub: cc => cc < 20 ? "맑음 — 해와 나 사이에 아무것도 없음" : cc < 50 ? "구름 조금 — 해는 여전히 따가움" :
+      cc < 85 ? "구름 많음 — 부드러워진 햇살" : "흐림 — 하늘이 그늘을 만들어줌",
+    tempSub: t => t < 10 ? "추움" : t < 20 ? "선선함" : t < 27 ? "따뜻함" : t < 32 ? "더움 — 그늘이 중요" : "폭염 — 그늘이 생존",
+    wxNote: (night, rain, cc, uv) =>
+      night ? "밤. UV 제로. 도시는 당신의 것." :
+      rain > 0.1 ? "비 — 오늘은 해가 문제가 아니에요. 최단 경로로 (우산 챙기고)." :
+      cc >= 85 ? "짙은 흐림 — 구름이 그늘을 대신해줘요." :
+      uv >= 8 ? "극한 UV — 그늘 쪽으로 다니세요." :
+      uv >= 5 ? "강한 햇살 — 그늘 경로가 답입니다." : "부드러운 빛의 시간.",
+    nightAll: "☾ 밤 · 모두 그늘", horizon: d => `☀ 지평선 위 ${d}°`,
+    sunLow: "낮은 해 · 긴 그림자", sunMid: "떠오르는 해", sunHigh: "높은 해 · 짧은 그림자",
+    veiled: "구름에 가린 해",
+    sunsetIn: (h, m) => `일몰까지 ${h ? h + "시간 " : ""}${m}분 — 그 후 도시는 당신의 것 🦇`,
+    sunriseIn: (h, m) => `일출까지 ${h ? h + "시간 " : ""}${m}분 — 지금을 즐기세요`,
+    moonLabel: p => `달 · ${p}% 밝음`,
+    moonTip: "달이 지켜봅니다 — UV 없음, 어디든 걸으세요",
+    startNav: "시작", endNav: "종료",
+    sunTip: d => `해 · 지평선 위 ${d}° — 그림자는 반대쪽으로 떨어져요`,
+    locating: "위치 찾는 중… (위치 접근을 허용하세요)",
+    foundYou: "찾았어요 🧛🏻 — 어디로 갈까요?",
+    noLocation: "위치를 확인할 수 없어요 — 뉴욕을 표시합니다. 위치 접근 허용 후 새로고침하세요.",
+    startSet: "출발지 설정됨 — 이제 도착지를 탭하세요.", destSet: "도착지 설정됨 — 경로를 찾으세요.",
+    startSetShort: "출발지 설정됨.", charting: "경로 계산 중…",
+    casting: n => `그림자 드리우는 중… (경로 ${n}개 발견)`,
+    readingSky: "하늘 읽는 중…",
+    dense: "밀집 지역 — 일부 그림자가 빠질 수 있어요. 확대하면 모두 보입니다.",
+    noData: "이 지역엔 건물 데이터가 없어요.",
+    noDataRoute: "건물 데이터 없음 — 경로는 표시되지만 그늘은 계산할 수 없어요.",
+    readingShadows: "이곳의 그림자 읽는 중…",
+    cleared: "지웠어요. 이제 어디로?", needBoth: "어디로 가세요? 도착지를 입력하거나 지도를 탭하세요.",
+    centered: "내 위치로 이동 🧛🏻", locBusy: "위치 찾는 중…",
+    locFail: "위치를 가져올 수 없어요 — 브라우저 권한을 확인하세요.",
+    findStart: "출발지 검색 중…", findDest: "도착지 검색 중…",
+    notFound: q => `주소를 찾을 수 없어요: "${q}" — 도시명을 추가해보세요.`,
+    myLocation: "🧛🏻 내 위치",
+    offRoute: m => `경로에서 <b>${m}m</b> 벗어남`, backLine: "그늘 선으로 돌아가세요 🧛🏻",
+    arrived: "<b>도착.</b> 🧛🏻", crypt: "관으로 귀환.",
+    remain: (m, km) => `<b>${m}분</b> · ${km}km 남음`,
+    ahead: (s, p) => `남은 직사광 약 ${s}분 · ${p}% 완료`
   }
 };
 const t = k => STR[state.lang][k];
@@ -513,8 +587,10 @@ function applyStatic() {
   $("lgShadow").textContent = t("lgShadow"); $("lgSun").textContent = t("lgSun");
   $("lgOvercast").textContent = t("lgOvercast"); $("lgNight").textContent = t("lgNight");
   $("lblWalking").textContent = t("nowWalking");
+  $("navToggle").textContent = state.navMode ? t("endNav") : t("startNav");
   $("langEN").classList.toggle("langOn", state.lang === "en");
   $("langNL").classList.toggle("langOn", state.lang === "nl");
+  $("langKO").classList.toggle("langOn", state.lang === "ko");
 }
 
 function setLang(l) {
@@ -607,7 +683,8 @@ function inShade(lat, lon) {
 const ShadowCanvas = L.Layer.extend({
   onAdd: function (m) {
     this._c = L.DomUtil.create("canvas", "leaflet-zoom-hide");
-    this._c.style.opacity = 0.33;
+    this._c.style.opacity = 0.85;
+    this._c.style.mixBlendMode = "multiply"; // shadows darken the map like real shade — streets stay readable
     this._c.style.pointerEvents = "none";
     m.getPanes().overlayPane.appendChild(this._c);
     m.on("moveend zoomend resize", this._reset, this);
@@ -625,7 +702,7 @@ const ShadowCanvas = L.Layer.extend({
     const m = this._map, ctx = this._c.getContext("2d");
     ctx.clearRect(0, 0, this._c.width, this._c.height);
     if (isNight()) return;
-    ctx.fillStyle = COLOR_SHADE;
+    ctx.fillStyle = "#aab0c8"; // cool slate — multiplied over the map it reads as true shade
     ctx.beginPath();
     for (const s of state.quads) {
       const p0 = m.latLngToContainerPoint(s.q[0]);
@@ -927,6 +1004,9 @@ function attachAutocomplete(which) {
             setPoint(which, ll, main + (sub ? ", " + sub.split(",")[0] : ""));
             box.style.display = "none";
             status(which === "start" ? t("startSetShort") : t("destSet"));
+            // choosing a destination is intent enough — route immediately
+            if (which === "end" && (state.start || state.pos)) plan();
+            else if (which === "start" && state.end) plan();
           });
           box.appendChild(d);
         }
@@ -959,7 +1039,7 @@ function drawSunMarker() {
     const glyph = phases[Math.round(ill.phase * 8) % 8];
     const moonHtml = `<div style="text-align:center;width:130px">
       <div style="font-size:38px;line-height:44px;filter:drop-shadow(0 1px 5px rgba(0,0,0,.55))">${glyph}</div>
-      <div style="font:700 10.5px -apple-system,sans-serif;color:#e9e3d7;margin-top:1px">${t("moonLabel")(Math.round(ill.fraction * 100))}</div>
+      <div style="font:700 10.5px Arial,sans-serif;color:#e9e3d7;margin-top:1px">${t("moonLabel")(Math.round(ill.fraction * 100))}</div>
     </div>`;
     L.marker([mc.lat + mdLat, mc.lng + mdLon], {
       icon: L.divIcon({ html: moonHtml, className: "sunIcon", iconSize: [130, 66], iconAnchor: [65, 22] }),
@@ -988,8 +1068,8 @@ function drawSunMarker() {
   const sub = veiled ? t("veiled") : (uv != null ? "UV " + Math.round(uv * 10) / 10 : "");
   const sunHtml = `<div style="text-align:center;width:130px">
     <div style="font-size:42px;line-height:48px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));opacity:${(0.72 + 0.28 * cf).toFixed(2)}">${glyph}</div>
-    <div style="font:700 10.5px -apple-system,sans-serif;color:#2e2e38;margin-top:1px">${label}</div>
-    ${sub ? `<div style="font:600 10px -apple-system,sans-serif;color:#6b6353;margin-top:1px">${sub}</div>` : ""}
+    <div style="font:700 10.5px Arial,sans-serif;color:#2e2e38;margin-top:1px">${label}</div>
+    ${sub ? `<div style="font:600 10px Arial,sans-serif;color:#6b6353;margin-top:1px">${sub}</div>` : ""}
   </div>`;
   L.marker(sunPos, {
     icon: L.divIcon({ html: sunHtml, className: "sunIcon", iconSize: [130, 84], iconAnchor: [65, 24] }),
@@ -1028,7 +1108,7 @@ function updateSliderGradient() {
 function vampIcon(heading) {
   const beam = (heading == null || isNaN(heading)) ? "" :
     `<div class="beam" style="transform:rotate(${Math.round(heading)}deg)"></div>`;
-  return L.divIcon({ html: `<div class="pulse"></div>${beam}🧛`, className: "batIcon", iconSize: [30, 30], iconAnchor: [15, 15] });
+  return L.divIcon({ html: `<div class="pulse"></div>${beam}🧛🏻`, className: "batIcon", iconSize: [30, 30], iconAnchor: [15, 15] });
 }
 let batMarker = null;
 let firstFix = true;
@@ -1089,6 +1169,7 @@ function startTracking() {
       updateSliderGradient();
     }
     updateProgress();
+    if (state.navMode) map.setView(ll, Math.max(map.getZoom(), 17), { animate: true }); // follow the Count
   }, () => {
     if (firstFix) status(t("noLocation"));
   }, { enableHighAccuracy: true, maximumAge: 3000 });
@@ -1230,7 +1311,7 @@ function renderSunInfo() {
   $("sunInfo").textContent = sun.altitude <= 0.01
     ? t("nightAll")
     : t("horizon")((sun.altitude*180/Math.PI).toFixed(0));
-  $("timeDate").textContent = state.when.toLocaleDateString(state.lang === "nl" ? "nl-NL" : undefined, { weekday: "short", month: "short", day: "numeric" });
+  $("timeDate").textContent = state.when.toLocaleDateString(state.lang === "nl" ? "nl-NL" : state.lang === "ko" ? "ko-KR" : undefined, { weekday: "short", month: "short", day: "numeric" });
   // countdown to the vampire hours
   const cc0 = state.start || map.getCenter();
   const times = SunCalc.getTimes(state.when, cc0.lat, cc0.lng);
@@ -1296,6 +1377,7 @@ function setTime(d) {
   state.when = d;
   $("timeLabel").textContent = fmtTime(d);
   $("timeSlider").value = d.getHours() * 60 + d.getMinutes();
+  $("nowBtn").classList.toggle("timeOff", Math.abs(d - new Date()) > 6 * 60000); // glows when you've left "now"
   refresh();
 }
 
@@ -1342,9 +1424,21 @@ $("timeSlider").addEventListener("input", e => {
   setTime(d);
 });
 
+$("swapBtn").addEventListener("click", () => {
+  const s = state.start, sl = $("startInput").value;
+  state.start = state.end; state.end = s;
+  $("startInput").value = $("endInput").value; $("endInput").value = sl;
+  $("startInput").dataset.geo = $("startInput").value; $("endInput").dataset.geo = $("endInput").value;
+  redrawMarkers();
+  if (state.start && state.end) plan();
+});
+
 $("clearBtn").addEventListener("click", () => {
   state.start = state.end = null;
   state.routes = []; state.navigating = false;
+  state.navMode = false;
+  document.body.classList.remove("navModeUI");
+  $("navToggle").textContent = t("startNav");
   state.selIdx = null; state.selManual = false;
   ["startInput", "endInput"].forEach(id => { $(id).value = ""; delete $(id).dataset.geo; });
   markerLayer.clearLayers(); routeLayer.clearLayers();
@@ -1369,8 +1463,21 @@ $("locateBtn").addEventListener("click", () => {
 
 $("langEN").addEventListener("click", () => setLang("en"));
 $("langNL").addEventListener("click", () => setLang("nl"));
+$("langKO").addEventListener("click", () => setLang("ko"));
 
 $("sheetHandle").addEventListener("click", () => document.body.classList.toggle("sheetCollapsed"));
+
+// Navigation mode: map takes over and follows you
+$("navToggle").addEventListener("click", () => {
+  state.navMode = !state.navMode;
+  document.body.classList.toggle("navModeUI", state.navMode);
+  $("navToggle").textContent = state.navMode ? t("endNav") : t("startNav");
+  if (state.navMode) {
+    enableCompass();
+    if (window.innerWidth <= 760) document.body.classList.add("sheetCollapsed");
+    if (state.pos) map.setView(state.pos, Math.max(map.getZoom(), 17), { animate: true });
+  }
+});
 
 async function plan() {
   if (state.busy) return;
