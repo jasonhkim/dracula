@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Dracula">
 <title>Dracula — Walk in the Shadows</title>
-<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path fill="%230c0c11" d="M60 13 C46 4 24 8 6 20 Q17 18 28 27 Q38 23 48 31 Q54 28 60 36 Q66 28 72 31 Q82 23 92 27 Q103 18 114 20 C96 8 74 4 60 13 Z"/><path fill="%230c0c11" d="M53 12 L56 4 L59 9 L61 9 L64 4 L67 12 C63 15 57 15 53 12 Z"/></svg>'>
+<link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 100"><path fill="%230c0c11" d="M6 12 Q20 22 38 52 Q56 50 72 66 Q84 58 98 63 C104 70 110 80 115 96 C120 80 126 70 132 63 Q146 58 158 66 Q174 50 192 52 Q210 22 224 12 Q214 7 202 8 C184 6 160 12 133 27 L136 24 C134 15 132 6 128 2 Q124 9 120 14 Q115 10 110 14 Q106 9 102 2 C98 6 96 15 94 24 L97 27 C70 12 46 6 28 8 Q16 7 6 12 Z"/></svg>'>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
@@ -31,7 +31,7 @@
     --sigHover: #1e1e26;
     /* Semantic light conditions */
     --c-night: #26304f;        /* night — midnight blue, unmistakably not graphite */
-    --c-shade: #7d829d;        /* cast shadow as it appears on the map */
+    --c-shade: #63636f;        /* cast shadow as it appears on the map */
     --c-overcast: #93a1ad;     /* clouds shielding you — pewter */
     --c-sun: #e3a857;          /* direct sun — amber */
     --c-scorch: #c23b22;       /* super hot / extreme UV */
@@ -39,7 +39,9 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, Helvetica, sans-serif; background: var(--bone); color: var(--text); height: 100vh; display: flex; overflow: hidden; -webkit-tap-highlight-color: transparent; }
   #map { flex: 1; height: 100vh; background: #e8e4da; }
-  .nightTiles .leaflet-tile-pane { filter: brightness(.55) saturate(.45); }
+  /* Dracula parchment: minimal grayscale base warmed toward bone ivory */
+  .leaflet-tile-pane { filter: sepia(.24) saturate(.88) brightness(1.02); }
+  .nightTiles .leaflet-tile-pane { filter: sepia(.15) brightness(.55) saturate(.45); }
 
   /* Vampire hours: after sunset the whole interface inverts — bone on ink */
   body.nightMode {
@@ -53,13 +55,25 @@
   .brand svg [fill="#0c0c11"], #splash svg [fill="#0c0c11"] { fill: var(--ink); }
   .brand svg [fill="#f7f3ea"], #splash svg [fill="#f7f3ea"] { fill: var(--bone); }
   .brand svg [stroke="#0c0c11"], #splash svg [stroke="#0c0c11"] { stroke: var(--ink); }
+  .brand svg [stroke="#f7f3ea"], #splash svg [stroke="#f7f3ea"] { stroke: var(--bone); }
   body, #sidebar, .card, input[type=text], button, .wx > div, .suggest { transition: background-color .5s ease, color .5s ease, border-color .5s ease; }
-  #sidebar { width: 380px; min-width: 380px; height: 100vh; overflow-y: auto; background: var(--bone); padding: 22px 20px; border-right: 1px solid var(--hairline); order: -1; }
+  #sidebar { width: 380px; min-width: 380px; height: 100vh; overflow-y: auto; background: var(--bone); padding: 22px 20px; border-right: 1px solid var(--hairline); order: -1; display: flex; flex-direction: column; }
+  #sidebar > * { flex-shrink: 0; }
+  /* reading order: your route → results → conditions → light */
+  #sheetHandle { order: 0; } .brand { order: 1; } .tagline { order: 2; } .langRow { order: 3; }
+  .legend { order: 4; } #routeCard { order: 5; } #seeking { order: 6; } #routes { order: 6; } #navCard { order: 7; }
+  #status { order: 8; } #wxCard { order: 9; } #lightCard { order: 10; } .footer { order: 11; }
+
+  /* Seeking: the moment between asking and knowing */
+  #seeking { display: none; background: var(--ink); color: var(--bone); border-radius: 14px; padding: 20px 16px 16px; margin-bottom: 14px; text-align: center; }
+  #seeking .sb { font-size: 27px; display: inline-block; animation: batHover 1.1s ease-in-out infinite alternate; }
+  #seeking .sp { font-family: Georgia, serif; font-style: italic; font-size: 0.9rem; color: #cfc8b8; margin-top: 9px; min-height: 1.3em; transition: opacity .25s; }
+  @keyframes batHover { from { transform: translateY(1px) rotate(-3deg); } to { transform: translateY(-6px) rotate(3deg); } }
 
   /* Brand — house codes: geometric sans, extreme tracking, interlocked monogram, black on ivory */
   .brand { text-align: center; margin-bottom: 6px; }
   .brand svg { display: block; margin: 2px auto 8px; }
-  .brand h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 2rem; font-weight: 600; letter-spacing: 0.2em; text-indent: 0.2em; color: var(--ink); }
+  .brand h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 1.7rem; font-weight: 600; letter-spacing: 0.2em; text-indent: 0.2em; color: var(--ink); }
   .brand .rule { height: 1px; background: var(--ink); opacity: 0.16; margin: 12px 30px 0; }
   .tagline { font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.24em; color: var(--muted); font-size: 0.6rem; text-align: center; margin: 10px 0 18px; }
 
@@ -118,6 +132,7 @@
   .badge { background: var(--blood); color: var(--bone); font-size: 0.56rem; font-weight: 700; padding: 3px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.14em; }
   .headline { margin-top: 8px; font-size: 1.02rem; }
   .headline b { font-variant-numeric: tabular-nums; }
+  .headline .shady b { font-family: Didot, "Bodoni MT", "Bodoni 72", Georgia, serif; font-size: 1.5em; font-weight: 600; line-height: 1; }
   .headline .sunny { color: var(--c-scorch); }
   .headline .shady { color: #4d5c50; }
   .substats { display: flex; gap: 14px; margin-top: 5px; font-size: 0.74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
@@ -138,7 +153,7 @@
   #navBar { height: 100%; width: 0%; background: var(--brass); transition: width .5s; }
 
   /* Legend — the language of light */
-  .legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
+  .legend { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; justify-content: center; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); padding: 9px 0; }
   .legend span { display: flex; align-items: center; gap: 6px; font-size: 0.6rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; }
   .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
@@ -164,17 +179,39 @@
 
   #errBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: var(--blood-deep); color: var(--bone); padding: 10px 16px; font: 600 14px Arial, sans-serif; }
 
-  /* Navigation mode: the map takes over, Google-style */
+  /* Home screen: just "where are you going?" — everything else appears once you answer */
+  body.homeUI #lblTo, body.homeUI #fromRow, body.homeUI #startWrap, body.homeUI #modeRow,
+  body.homeUI #goBtn, body.homeUI #utilRow, body.homeUI #mapTip,
+  body.homeUI #lightCard, body.homeUI #wxCard, body.homeUI .legend, body.homeUI .footer { display: none; }
+
+  /* Navigation mode: the map IS the app; only the trip card floats on top */
   body.navModeUI .brand, body.navModeUI .tagline, body.navModeUI .langRow, body.navModeUI .legend,
   body.navModeUI #routeCard, body.navModeUI #lightCard, body.navModeUI #wxCard, body.navModeUI #routes,
-  body.navModeUI .footer, body.navModeUI #status { display: none; }
+  body.navModeUI .footer, body.navModeUI #status, body.navModeUI #sheetHandle { display: none; }
+  body.navModeUI #sidebar { position: fixed; top: 10px; left: 12px; right: 12px; width: auto; min-width: 0;
+    height: auto; background: transparent; border: none; padding: 0; z-index: 1500; overflow: visible; }
+  body.navModeUI #map { height: 100vh !important; }
+  body.navModeUI #navCard { box-shadow: 0 6px 24px rgba(0,0,0,.35); margin-bottom: 0; }
+  #navDir { display: none; font-size: 1.02rem; font-weight: 700; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #2a2a33; color: #f2ecdf; }
+  #navDir .ic { color: var(--brass); margin-right: 7px; }
+  #recenterBtn { display: none; }
+  body.navModeUI #recenterBtn { display: flex; position: fixed; right: 14px; bottom: 20px; z-index: 1600; width: 48px; height: 48px; border-radius: 50%; background: var(--card); color: var(--text); border: 1px solid var(--hairline); font-size: 1.5rem; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.3); padding: 0; min-height: 0; }
   #navToggle { width: 100%; margin-top: 12px; background: var(--brass); color: #1a1512; }
   #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
+
+  /* Arrival card */
+  #arriveCard, #briefCard { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(12,12,17,.55); align-items: center; justify-content: center; padding: 20px; }
+  .acInner { background: #14131a; color: #f2ecdf; border-radius: 16px; padding: 30px 28px; text-align: center; max-width: 340px; animation: splashPop .5s cubic-bezier(.2,.8,.25,1) both; }
+  .acInner .acBat { font-size: 44px; line-height: 1; }
+  .acInner h2 { font-family: Didot, "Bodoni MT", "Bodoni 72", Georgia, serif; font-size: 1.35rem; letter-spacing: .06em; margin: 12px 0 8px; font-weight: 600; }
+  #acStats { font-size: .85rem; color: #b0a8c0; line-height: 1.65; }
+  #acBtn, #briefBtn { margin-top: 18px; background: var(--brass); color: #1a1512; width: 100%; }
+  #acBtn:hover, #briefBtn:hover { background: var(--brass); filter: brightness(1.08); }
 
   /* Opening splash */
   #splash { position: fixed; inset: 0; z-index: 10000; background: var(--bone); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; animation: splashFade .55s ease 2.1s forwards; }
   #splash .em { animation: splashPop .9s cubic-bezier(.2,.8,.25,1) both; }
-  #splash h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 2.3rem; font-weight: 600; letter-spacing: 0.22em; text-indent: 0.22em; color: var(--ink); animation: trackIn 1.2s cubic-bezier(.2,.8,.25,1) .15s both; }
+  #splash h1 { font-family: Didot, "Bodoni MT", "Bodoni 72", "Playfair Display", Georgia, serif; font-size: 2rem; font-weight: 600; letter-spacing: 0.22em; text-indent: 0.22em; color: var(--ink); animation: trackIn 1.2s cubic-bezier(.2,.8,.25,1) .15s both; }
   @keyframes trackIn { from { letter-spacing: 0.04em; opacity: 0; } to { letter-spacing: 0.22em; opacity: 1; } }
   #splash .tg { font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.26em; color: var(--muted); font-size: 0.64rem; animation: splashPop .9s ease .35s both; }
   @keyframes splashPop { 0% { opacity: 0; transform: scale(.92) translateY(6px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
@@ -209,13 +246,42 @@
 <body>
 <div id="errBanner"></div>
 
+<div id="arriveCard">
+  <div class="acInner">
+    <div class="acBat">🦇</div>
+    <h2 id="acTitle"></h2>
+    <div id="acStats"></div>
+    <button id="acBtn">Done</button>
+  </div>
+</div>
+
+<div id="briefCard">
+  <div class="acInner">
+    <svg width="152" height="66" viewBox="0 0 230 100">
+      <path fill="#f2ecdf" d="M6 12 Q20 22 38 52 Q56 50 72 66 Q84 58 98 63 C104 70 110 80 115 96 C120 80 126 70 132 63 Q146 58 158 66 Q174 50 192 52 Q210 22 224 12 Q214 7 202 8 C184 6 160 12 133 27 L136 24 C134 15 132 6 128 2 Q124 9 120 14 Q115 10 110 14 Q106 9 102 2 C98 6 96 15 94 24 L97 27 C70 12 46 6 28 8 Q16 7 6 12 Z"/>
+      <g fill="#14131a">
+        <path d="M92 24 L17 12.6 L17 13.6 L92 26.4 Z"/><path d="M94 31 L46 42.4 L46 43.6 L94 33.6 Z"/>
+        <path d="M138 24 L213 12.6 L213 13.6 L138 26.4 Z"/><path d="M136 31 L184 42.4 L184 43.6 L136 33.6 Z"/>
+      </g>
+      <g id="briefShades" style="display:none"><rect x="100" y="13" width="30" height="5.6" rx="2.7" fill="#14131a"/><rect x="114.2" y="14.4" width="1.6" height="2.4" fill="#f2ecdf"/></g>
+    </svg>
+    <h2 id="briefTitle"></h2>
+    <div id="briefText" style="font-size:.88rem;color:#b0a8c0;line-height:1.6"></div>
+    <div id="briefWhy" style="font-size:.74rem;color:#8b8496;margin-top:9px"></div>
+    <button id="briefBtn">Noted</button>
+  </div>
+</div>
+
 <div id="splash">
   <span class="bat" style="left:18%;top:64%;animation-delay:.2s">🦇</span>
   <span class="bat" style="left:70%;top:30%;animation-delay:.45s;font-size:15px">🦇</span>
   <span class="bat" style="left:40%;top:20%;animation-delay:.7s;font-size:24px">🦇</span>
-  <svg class="em" width="150" height="92" viewBox="0 0 120 50" aria-hidden="true">
-    <path fill="#0c0c11" d="M60 14 C46 4 24 8 6 22 Q17 20 28 32 Q38 27 48 38 Q54 34 60 44 Q66 34 72 38 Q82 27 92 32 Q103 20 114 22 C96 8 74 4 60 14 Z"/>
-    <path fill="#0c0c11" d="M53 13 L56 4 L59 9.5 L61 9.5 L64 4 L67 13 C63 16.5 57 16.5 53 13 Z"/>
+  <svg class="em" width="184" height="80" viewBox="0 0 230 100" aria-hidden="true">
+    <path fill="#0c0c11" d="M6 12 Q20 22 38 52 Q56 50 72 66 Q84 58 98 63 C104 70 110 80 115 96 C120 80 126 70 132 63 Q146 58 158 66 Q174 50 192 52 Q210 22 224 12 Q214 7 202 8 C184 6 160 12 133 27 L136 24 C134 15 132 6 128 2 Q124 9 120 14 Q115 10 110 14 Q106 9 102 2 C98 6 96 15 94 24 L97 27 C70 12 46 6 28 8 Q16 7 6 12 Z"/>
+      <g fill="#f7f3ea">
+        <path d="M92 24 L17 12.6 L17 13.6 L92 26.4 Z"/><path d="M94 31 L46 42.4 L46 43.6 L94 33.6 Z"/>
+        <path d="M138 24 L213 12.6 L213 13.6 L138 26.4 Z"/><path d="M136 31 L184 42.4 L184 43.6 L136 33.6 Z"/>
+      </g>
   </svg>
   <h1>DRACULA</h1>
   <div class="tg">Every street has a shadow</div>
@@ -238,16 +304,19 @@ window.addEventListener("DOMContentLoaded", function(){
 <div id="sidebar">
   <div id="sheetHandle" title="Show / hide controls"><span></span></div>
   <div class="brand">
-    <svg width="72" height="44" viewBox="0 0 120 50" aria-hidden="true" style="display:block;margin:0 auto 2px">
-      <!-- wide span, sharp downward tips, deeper membrane scallops -->
-      <path fill="#0c0c11" d="M60 14 C46 4 24 8 6 22 Q17 20 28 32 Q38 27 48 38 Q54 34 60 44 Q66 34 72 38 Q82 27 92 32 Q103 20 114 22 C96 8 74 4 60 14 Z"/>
-      <path fill="#0c0c11" d="M53 13 L56 4 L59 9.5 L61 9.5 L64 4 L67 13 C63 16.5 57 16.5 53 13 Z"/>
+    <svg width="110" height="48" viewBox="0 0 230 100" aria-hidden="true" style="display:block;margin:0 auto 2px">
+      <!-- classic silhouette: smooth arched top, scalloped underside, tail point, folded-wing accents -->
+      <path fill="#0c0c11" d="M6 12 Q20 22 38 52 Q56 50 72 66 Q84 58 98 63 C104 70 110 80 115 96 C120 80 126 70 132 63 Q146 58 158 66 Q174 50 192 52 Q210 22 224 12 Q214 7 202 8 C184 6 160 12 133 27 L136 24 C134 15 132 6 128 2 Q124 9 120 14 Q115 10 110 14 Q106 9 102 2 C98 6 96 15 94 24 L97 27 C70 12 46 6 28 8 Q16 7 6 12 Z"/>
+      <g fill="#f7f3ea">
+        <path d="M92 24 L17 12.6 L17 13.6 L92 26.4 Z"/><path d="M94 31 L46 42.4 L46 43.6 L94 33.6 Z"/>
+        <path d="M138 24 L213 12.6 L213 13.6 L138 26.4 Z"/><path d="M136 31 L184 42.4 L184 43.6 L136 33.6 Z"/>
+      </g>
     </svg>
     <h1>DRACULA</h1>
     <div class="rule"></div>
   </div>
   <div class="tagline" id="tagline">Every street has a shadow</div>
-  <div class="langRow"><button id="langEN" class="langBtn langOn">EN</button><span style="color:var(--hairline)">·</span><button id="langNL" class="langBtn">NL</button><span style="color:var(--hairline)">·</span><button id="langKO" class="langBtn">KO</button></div>
+  <div class="langRow"><button id="langEN" class="langBtn langOn">EN</button><span style="color:var(--hairline)">·</span><button id="langNL" class="langBtn">NL</button><span style="color:var(--hairline)">·</span><button id="langKO" class="langBtn">KO</button><span style="color:var(--hairline)">·</span><button id="langZH" class="langBtn">中</button></div>
 
   <div class="legend" style="margin:0 0 14px">
     <span><span class="dot" style="background:var(--c-shade)"></span><span id="lgShadow">shadow</span></span>
@@ -257,6 +326,7 @@ window.addEventListener("DOMContentLoaded", function(){
   </div>
 
   <div id="navCard">
+    <div id="navDir"></div>
     <h2 id="lblWalking">Now walking</h2>
     <div id="navText"></div>
     <div id="navSub"></div>
@@ -268,23 +338,24 @@ window.addEventListener("DOMContentLoaded", function(){
     <h2 id="lblYourWalk">Your walk</h2>
     <div class="fieldLabel" id="lblTo">To</div>
     <div class="inputWrap">
-      <input type="text" id="endInput" placeholder="Where are you going?" autocomplete="off">
+      <input type="text" id="endInput" placeholder="Where are you going?" autocomplete="off" style="padding-right:34px">
+      <button id="endClear" title="Clear" style="position:absolute;right:4px;top:6px;background:none;border:none;color:var(--muted);font-size:.95rem;padding:5px 9px;min-height:0;cursor:pointer;display:none">✕</button>
       <div class="suggest" id="endSuggest" style="display:none"></div>
     </div>
-    <div style="display:flex;justify-content:space-between;align-items:center">
+    <div style="display:flex;justify-content:space-between;align-items:center" id="fromRow">
       <span class="fieldLabel" id="lblFrom">From</span>
       <button id="swapBtn" class="langBtn" title="Swap start and destination" style="font-size:.95rem;padding:0 6px">⇅</button>
     </div>
-    <div class="inputWrap">
+    <div class="inputWrap" id="startWrap">
       <input type="text" id="startInput" placeholder="My location (automatic)" autocomplete="off">
       <div class="suggest" id="startSuggest" style="display:none"></div>
     </div>
-    <div class="btnrow" style="margin-bottom:10px">
+    <div class="btnrow" style="margin-bottom:10px" id="modeRow">
       <button id="modeWalk" class="secondary modeOn"><svg width="11" height="14" viewBox="0 0 20 28" fill="currentColor"><circle cx="11" cy="3.5" r="3"/><path d="M9 8.5 L14.5 10.5 V17 L12 27 H9.4 L11.7 17.5 L8.5 15 L5.8 20.5 H3 L7 12.5 Z M14.5 12 L17.5 15.5 L16 17 L13.5 14.5 Z"/></svg><span id="lblWalk">Walk</span></button>
       <button id="modeBike" class="secondary"><svg width="17" height="12" viewBox="0 0 34 22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15" r="5.3"/><circle cx="26.5" cy="15" r="5.3"/><path d="M7.5 15 L13.5 6 H21 M13.5 6 L20 15 H7.5 M21 6 L26.5 15 M19 2.5 h4.5"/></svg><span id="lblBike">Bike</span></button>
     </div>
     <button class="big" id="goBtn">Find the Shade Route</button>
-    <div class="btnrow">
+    <div class="btnrow" id="utilRow">
       <button id="locateBtn" class="secondary">Locate me</button>
       <button id="clearBtn" class="secondary">Clear</button>
     </div>
@@ -317,6 +388,11 @@ window.addEventListener("DOMContentLoaded", function(){
     <div class="wxNote" id="wxNote"></div>
   </div>
 
+  <div id="seeking">
+    <span class="sb">🦇</span>
+    <div class="sp" id="seekPhrase"></div>
+  </div>
+
   <div id="routes"></div>
 
   <div class="footer">
@@ -325,6 +401,7 @@ window.addEventListener("DOMContentLoaded", function(){
   </div>
 </div>
 <div id="map"></div>
+<button id="recenterBtn" title="Recenter">⌖</button>
 
 <script>
 "use strict";
@@ -337,6 +414,7 @@ const DEFAULT_HEIGHT = 12;
 const MAX_SHADOW_LEN = 400;
 const AREA_SHADE_MIN_ZOOM = 15;
 const BUILDING_BUDGET = 3500;
+const GRID = 0.0009; // spatial index cell (~70–100 m): shade lookups touch a handful of quads, not all of them
 // route palette: best = oxblood; alternates recede in charcoal & taupe
 const ROUTE_COLORS = ["#8e1f2f", "#4a4a55", "#8a8478"];
 const COLOR_SHADE = "#2e2e38";
@@ -348,7 +426,7 @@ const COLOR_OVERCAST = "#93a1ad";
 // ---------- Map ----------
 const map = L.map("map", { preferCanvas: true }).setView([40.7580, -73.9855], 15);
 let tileErrors = 0;
-const baseTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+const baseTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: "&copy; OpenStreetMap &copy; CARTO", maxZoom: 20
 }).addTo(map);
 baseTiles.on("tileerror", () => {
@@ -365,7 +443,7 @@ const markerLayer = L.layerGroup().addTo(map);
 // ---------- State ----------
 const state = {
   start: null, end: null,
-  routes: [], buildings: [], trees: [], quads: [], treeShadows: [],
+  routes: [], buildings: [], trees: [], crosswalks: [], quads: [], treeShadows: [],
   when: new Date(), weather: null, bestIdx: 0, busy: false,
   pos: null, areaBounds: null, navigating: false,
   selIdx: null, selManual: false,
@@ -375,7 +453,8 @@ const speed = () => state.mode === "bike" ? 4.2 : 1.4; // m/s
 
 // ---------- Language (EN / NL) ----------
 state.lang = (navigator.language || "").toLowerCase().startsWith("nl") ? "nl"
-           : (navigator.language || "").toLowerCase().startsWith("ko") ? "ko" : "en";
+           : (navigator.language || "").toLowerCase().startsWith("ko") ? "ko"
+           : (navigator.language || "").toLowerCase().startsWith("zh") ? "zh" : "en";
 const STR = {
   en: {
     tagline: "Every street has a shadow",
@@ -386,7 +465,7 @@ const STR = {
     mapTip: "Tip: you can also tap the map — first tap sets the start, second the destination.",
     light: "Light", backNow: "Back to now", conditions: "Conditions here · now",
     cloud: "Cloud", temp: "Temp",
-    lgShadow: "shadow", lgSun: "direct sun", lgOvercast: "overcast", lgNight: "night",
+    lgShadow: "shadow", lgSun: "direct sun", lgOvercast: "overcast", lgNight: "night", lgTree: "tree",
     nowWalking: "On the way",
     fastest: "Fastest route", shadeRoute: "Shade route", alternative: "Alternative", badge: "Dracula route",
     dracRoute: "Dracula route", alsoFastest: "also the fastest",
@@ -418,6 +497,25 @@ const STR = {
     moonLabel: p => `Moon · ${p}% lit`,
     moonTip: "The moon keeps watch — no UV, all shade, walk anywhere",
     startNav: "Start", endNav: "End route",
+    navCross: d => `Cross the street in ${d} m`,
+    navShadeAhead: d => `Shade for the next ${d} m — stay on this side`,
+    navSunAhead: (d, l) => `Sun in ${d} m — ${l} m of it`,
+    arrAt: s => `arrive ${s}`,
+    acTitle: "You survived the sun", acNightTitle: "The night was yours",
+    acStats: (km, min, sun, saved) => `${km} km · ${min} min · only ${sun} min of direct sun${parseFloat(saved) > 0.2 ? `<br>You dodged ${saved} min vs the fastest route` : ""}`,
+    acDone: "Done",
+    seekPhrases: ["Summoning the shadows…", "Reading the sun's path…", "Measuring every shadow in town…", "Consulting the Count…", "Charting the dark side of the street…"],
+    briefTitle: "Before you step out", briefBtn: "Noted",
+    briefUvHigh: "Extreme UV today. Sunscreen, sunglasses — and trust the shade route.",
+    briefUvMid: "Strong sun today. Don't forget your sunscreen.",
+    briefUvLow: "Gentle sun today. A fine day to wander.",
+    briefRain: "Rain on the way — today the sun isn't the enemy. Bring a coat.",
+    briefCloud: "Overcast — the clouds are doing the shading for you today.",
+    briefNight: "The sun is down. The city is yours.",
+    briefWhyUv: v => `Why: today's peak UV is ${v}`,
+    briefWhyRain: v => `Why: up to ${v} mm of rain expected in the coming hours`,
+    briefWhyCloud: v => `Why: cloud cover is ${v}% right now`,
+    briefWhyNight: s => `Sunrise at ${s}`,
     sunTip: d => `sun · ${d}° above the horizon — shadows fall away from me`,
     locating: "Locating you… (allow location access to begin)",
     foundYou: "Found you 🧛🏻 — where to?",
@@ -450,7 +548,7 @@ const STR = {
     mapTip: "Tip: tik op de kaart — de eerste tik is je start, de tweede je bestemming.",
     light: "Licht", backNow: "Terug naar nu", conditions: "Nu · hier",
     cloud: "Wolken", temp: "Temp",
-    lgShadow: "schaduw", lgSun: "volle zon", lgOvercast: "bewolkt", lgNight: "nacht",
+    lgShadow: "schaduw", lgSun: "volle zon", lgOvercast: "bewolkt", lgNight: "nacht", lgTree: "boom",
     nowWalking: "Onderweg",
     fastest: "Snelste route", shadeRoute: "Schaduwroute", alternative: "Alternatief", badge: "Dracula-route",
     dracRoute: "Dracula-route", alsoFastest: "ook de snelste",
@@ -482,6 +580,25 @@ const STR = {
     moonLabel: p => `Maan · ${p}% verlicht`,
     moonTip: "De maan waakt — geen UV, alles schaduw, loop waar je wilt",
     startNav: "Start", endNav: "Route stoppen",
+    navCross: d => `Steek over binnen ${d} m`,
+    navShadeAhead: d => `Schaduw de komende ${d} m — blijf aan deze kant`,
+    navSunAhead: (d, l) => `Zon over ${d} m — ${l} m lang`,
+    arrAt: s => `aankomst ${s}`,
+    acTitle: "Je hebt de zon overleefd", acNightTitle: "De nacht was van jou",
+    acStats: (km, min, sun, saved) => `${km} km · ${min} min · slechts ${sun} min volle zon${parseFloat(saved) > 0.2 ? `<br>Je vermeed ${saved} min t.o.v. de snelste route` : ""}`,
+    acDone: "Klaar",
+    seekPhrases: ["De schaduwen oproepen…", "De baan van de zon lezen…", "Elke schaduw in de stad meten…", "De graaf raadplegen…", "De schaduwkant van de straat uittekenen…"],
+    briefTitle: "Voor je naar buiten gaat", briefBtn: "Begrepen",
+    briefUvHigh: "Extreme UV vandaag. Zonnebrand, zonnebril — en vertrouw de schaduwroute.",
+    briefUvMid: "Felle zon vandaag. Vergeet je zonnebrand niet.",
+    briefUvLow: "Zachte zon vandaag. Een fijne dag om te dwalen.",
+    briefRain: "Regen op komst — vandaag is de zon de vijand niet. Neem een jas mee.",
+    briefCloud: "Bewolkt — de wolken doen vandaag het schaduwwerk.",
+    briefNight: "De zon is onder. De stad is van jou.",
+    briefWhyUv: v => `Waarom: de piek-UV vandaag is ${v}`,
+    briefWhyRain: v => `Waarom: tot ${v} mm regen verwacht de komende uren`,
+    briefWhyCloud: v => `Waarom: de bewolking is nu ${v}%`,
+    briefWhyNight: s => `Zonsopkomst om ${s}`,
     sunTip: d => `zon · ${d}° boven de horizon — schaduwen vallen van mij af`,
     locating: "Zoeken waar je bent… (sta locatietoegang toe)",
     foundYou: "Gevonden 🧛🏻 — waar ga je heen?",
@@ -514,7 +631,7 @@ const STR = {
     mapTip: "팁: 지도를 탭해도 됩니다 — 첫 탭은 출발지, 두 번째 탭은 도착지.",
     light: "빛", backNow: "지금으로", conditions: "현재 · 여기",
     cloud: "구름", temp: "기온",
-    lgShadow: "그늘", lgSun: "직사광", lgOvercast: "흐림", lgNight: "밤",
+    lgShadow: "그늘", lgSun: "직사광", lgOvercast: "흐림", lgNight: "밤", lgTree: "나무",
     nowWalking: "이동 중",
     fastest: "최단 경로", shadeRoute: "그늘 경로", alternative: "대안 경로", badge: "드라큘라 경로",
     dracRoute: "드라큘라 경로", alsoFastest: "가장 빠르기도 함",
@@ -546,6 +663,25 @@ const STR = {
     moonLabel: p => `달 · ${p}% 밝음`,
     moonTip: "달이 지켜봅니다 — UV 없음, 어디든 걸으세요",
     startNav: "시작", endNav: "종료",
+    navCross: d => `${d}m 앞에서 길을 건너세요`,
+    navShadeAhead: d => `앞으로 ${d}m 그늘 — 이쪽으로 계속`,
+    navSunAhead: (d, l) => `${d}m 앞 햇빛 — 길이 ${l}m`,
+    arrAt: s => `${s} 도착`,
+    acTitle: "태양에서 살아남았습니다", acNightTitle: "밤은 당신의 것이었어요",
+    acStats: (km, min, sun, saved) => `${km}km · ${min}분 · 직사광 단 ${sun}분${parseFloat(saved) > 0.2 ? `<br>최단 경로 대비 햇빛 ${saved}분 회피` : ""}`,
+    acDone: "확인",
+    seekPhrases: ["그림자를 소환하는 중…", "태양의 길을 읽는 중…", "도시의 모든 그늘을 재는 중…", "백작님께 여쭙는 중…", "거리의 그늘진 쪽을 그리는 중…"],
+    briefTitle: "나서기 전에", briefBtn: "확인",
+    briefUvHigh: "오늘은 극한 자외선. 선크림, 선글라스 — 그리고 그늘 경로를 믿으세요.",
+    briefUvMid: "오늘은 햇살이 강해요. 선크림 잊지 마세요.",
+    briefUvLow: "오늘은 부드러운 햇살. 거닐기 좋은 날.",
+    briefRain: "비 소식 — 오늘은 해가 적이 아니에요. 겉옷 챙기세요.",
+    briefCloud: "흐림 — 오늘은 구름이 그늘을 대신해요.",
+    briefNight: "해가 졌어요. 도시는 당신의 것.",
+    briefWhyUv: v => `이유: 오늘 최고 자외선 지수 ${v}`,
+    briefWhyRain: v => `이유: 앞으로 몇 시간 내 최대 ${v}mm 비 예보`,
+    briefWhyCloud: v => `이유: 현재 구름량 ${v}%`,
+    briefWhyNight: s => `일출 ${s}`,
     sunTip: d => `해 · 지평선 위 ${d}° — 그림자는 반대쪽으로 떨어져요`,
     locating: "위치 찾는 중… (위치 접근을 허용하세요)",
     foundYou: "찾았어요 🧛🏻 — 어디로 갈까요?",
@@ -568,6 +704,89 @@ const STR = {
     arrived: "<b>도착.</b> 🧛🏻", crypt: "관으로 귀환.",
     remain: (m, km) => `<b>${m}분</b> · ${km}km 남음`,
     ahead: (s, p) => `남은 직사광 약 ${s}분 · ${p}% 완료`
+  },
+  zh: {
+    tagline: "每条街都有一片阴影",
+    yourWalk: "路线", to: "目的地", from: "出发地",
+    endPh: "你要去哪里？", startPh: "我的位置（自动）",
+    walk: "步行", bike: "骑行", go: "寻找遮荫路线",
+    locate: "定位我", clear: "清除",
+    mapTip: "提示：也可以点击地图——第一次点击设起点，第二次设终点。",
+    light: "光线", backNow: "回到现在", conditions: "此刻 · 此地",
+    cloud: "云量", temp: "气温",
+    lgShadow: "阴影", lgSun: "直射阳光", lgOvercast: "阴天", lgNight: "夜晚", lgTree: "树木",
+    nowWalking: "行进中",
+    fastest: "最快路线", shadeRoute: "遮荫路线", alternative: "备选路线", badge: "德古拉路线",
+    dracRoute: "德古拉路线", alsoFastest: "同时也是最快",
+    inShadow: p => `<span class="shady"><b>${p}%</b> 在阴影中</span>`,
+    sunNight: "今晚没有太阳",
+    sunOvercast: m => `${m} 分钟无遮挡——但云层为你遮阳`,
+    sunOpen: (s, w) => `<span class="sunny">${w} 分钟中有 <b>${s} 分钟</b>暴露在阳光下</span>`,
+    yourPick: d => `你的选择——比德古拉路线多晒 ${d} 分钟`,
+    minMove: (m, bike) => `${bike ? "骑行" : "步行"} ${m} 分钟`,
+    crossN: n => `↔ 过街 ${n} 次`,
+    tapRoute: "点击任一路线预览——实线沿遮荫人行道；○ 为过街点",
+    uvSub: (uv, night) => night ? "没有太阳，没有紫外线" :
+      uv < 3 ? "低——不用急着找阴凉" : uv < 6 ? "中等——约30分钟晒伤" :
+      uv < 8 ? "高——约20分钟晒伤" : uv < 11 ? "很高——约10分钟晒伤" : "极高——几分钟内晒伤",
+    cloudSub: cc => cc < 20 ? "晴朗——你和太阳之间毫无遮挡" : cc < 50 ? "少云——阳光依然刺人" :
+      cc < 85 ? "多云——阳光柔和" : "阴天——天空替你遮荫",
+    tempSub: t => t < 10 ? "冷" : t < 20 ? "温和" : t < 27 ? "舒适温暖" : t < 32 ? "热——阴凉很重要" : "酷热——阴凉就是生存",
+    wxNote: (night, rain, cc, uv) =>
+      night ? "夜晚。零紫外线。城市属于你。" :
+      rain > 0.1 ? "下雨——今天太阳不是问题。走最快路线（带上外套）。" :
+      cc >= 85 ? "厚云蔽日——云层替你遮荫。" :
+      uv >= 8 ? "极高紫外线——请走阴影一侧。" :
+      uv >= 5 ? "阳光强烈——遮荫路线值得。" : "此刻光线温柔。",
+    nightAll: "☾ 夜晚 · 处处是荫", horizon: d => `☀ 高于地平线 ${d}°`,
+    sunLow: "低日 · 长影", sunMid: "日升", sunHigh: "高日 · 短影",
+    veiled: "云遮日",
+    sunsetIn: (h, m) => `距日落 ${h ? h + "小时" : ""}${m}分——之后城市属于你 🦇`,
+    sunriseIn: (h, m) => `距日出 ${h ? h + "小时" : ""}${m}分——且行且珍惜`,
+    moonLabel: p => `月亮 · ${p}% 明亮`,
+    moonTip: "月亮守望——没有紫外线，随处可走",
+    startNav: "开始", endNav: "结束导航",
+    navCross: d => `${d} 米后过街`,
+    navShadeAhead: d => `前方 ${d} 米均有阴影——保持这一侧`,
+    navSunAhead: (d, l) => `${d} 米后进入阳光——长约 ${l} 米`,
+    arrAt: s => `${s} 到达`,
+    acTitle: "你在阳光下幸存了", acNightTitle: "黑夜属于你",
+    acStats: (km, min, sun, saved) => `${km} 公里 · ${min} 分钟 · 仅 ${sun} 分钟直射${parseFloat(saved) > 0.2 ? `<br>比最快路线少晒 ${saved} 分钟` : ""}`,
+    acDone: "完成",
+    seekPhrases: ["召唤阴影中…", "解读太阳的轨迹…", "丈量全城的阴影…", "请示伯爵中…", "描绘街道的背阴面…"],
+    briefTitle: "出门之前", briefBtn: "知道了",
+    briefUvHigh: "今日紫外线极高。防晒霜、墨镜——并请相信遮荫路线。",
+    briefUvMid: "今日阳光强烈。别忘了防晒霜。",
+    briefUvLow: "今日阳光温和。适合漫步的一天。",
+    briefRain: "雨要来了——今天太阳不是敌人。带上外套。",
+    briefCloud: "阴天——今天云层替你遮荫。",
+    briefNight: "太阳已落。城市属于你。",
+    briefWhyUv: v => `原因：今日紫外线峰值为 ${v}`,
+    briefWhyRain: v => `原因：未来数小时预计最多 ${v} 毫米降雨`,
+    briefWhyCloud: v => `原因：当前云量 ${v}%`,
+    briefWhyNight: s => `日出时间 ${s}`,
+    sunTip: d => `太阳 · 高于地平线 ${d}°——影子朝远离我的方向`,
+    locating: "正在定位…（请允许位置访问）",
+    foundYou: "找到你了 🧛🏻——去哪儿？",
+    noLocation: "无法获取位置——显示纽约。请允许位置访问后刷新。",
+    startSet: "起点已设——现在点击终点。", destSet: "终点已设——寻找路线吧。",
+    startSetShort: "起点已设。", charting: "规划路线中…",
+    casting: n => `投射阴影中…（找到 ${n} 条路线）`,
+    readingSky: "解读天空中…",
+    dense: "密集区域——此缩放级别下部分阴影可能缺失。放大可见全部。",
+    noData: "此区域没有建筑数据。",
+    noDataRoute: "没有建筑数据——路线已显示，但无法计算遮荫。",
+    readingShadows: "读取此处阴影中…",
+    cleared: "已清除。接下来去哪？", needBoth: "你要去哪里？输入终点或点击地图。",
+    centered: "已定位到你 🧛🏻", locBusy: "定位中…",
+    locFail: "无法获取位置——请检查浏览器权限。",
+    findStart: "搜索起点中…", findDest: "搜索终点中…",
+    notFound: q => `未找到地址："${q}"——试试加上城市名。`,
+    myLocation: "🧛🏻 我的位置",
+    offRoute: m => `你偏离路线 <b>${m} 米</b>`, backLine: "回到阴影线上 🧛🏻",
+    arrived: "<b>到达。</b> 🧛🏻", crypt: "回到墓穴。",
+    remain: (m, km) => `<b>${m} 分钟</b> · 剩余 ${km} 公里`,
+    ahead: (s, p) => `前方约 ${s} 分钟直射阳光 · 已完成 ${p}%`
   }
 };
 const t = k => STR[state.lang][k];
@@ -588,9 +807,11 @@ function applyStatic() {
   $("lgOvercast").textContent = t("lgOvercast"); $("lgNight").textContent = t("lgNight");
   $("lblWalking").textContent = t("nowWalking");
   $("navToggle").textContent = state.navMode ? t("endNav") : t("startNav");
+  $("acBtn").textContent = t("acDone");
   $("langEN").classList.toggle("langOn", state.lang === "en");
   $("langNL").classList.toggle("langOn", state.lang === "nl");
   $("langKO").classList.toggle("langOn", state.lang === "ko");
+  $("langZH").classList.toggle("langOn", state.lang === "zh");
 }
 
 function setLang(l) {
@@ -654,6 +875,19 @@ function computeShadows() {
       r: tr.cr
     });
   }
+  // spatial index: every quad registered in each grid cell its bbox touches
+  state.grid = new Map();
+  for (let idx = 0; idx < state.quads.length; idx++) {
+    const s = state.quads[idx];
+    const x0 = Math.floor(s.minLon / GRID), x1 = Math.floor(s.maxLon / GRID);
+    const y0 = Math.floor(s.minLat / GRID), y1 = Math.floor(s.maxLat / GRID);
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const k = y * 100000 + x;
+      let a = state.grid.get(k);
+      if (!a) state.grid.set(k, a = []);
+      a.push(idx);
+    }
+  }
 }
 
 function pointInQuad(lat, lon, q) {
@@ -667,7 +901,9 @@ function pointInQuad(lat, lon, q) {
 
 function inShade(lat, lon) {
   if (isNight()) return true;
-  for (const s of state.quads) {
+  const cell = state.grid && state.grid.get(Math.floor(lat / GRID) * 100000 + Math.floor(lon / GRID));
+  if (cell) for (const idx of cell) {
+    const s = state.quads[idx];
     if (lat < s.minLat || lat > s.maxLat || lon < s.minLon || lon > s.maxLon) continue;
     if (pointInQuad(lat, lon, s.q)) return true;
   }
@@ -683,8 +919,7 @@ function inShade(lat, lon) {
 const ShadowCanvas = L.Layer.extend({
   onAdd: function (m) {
     this._c = L.DomUtil.create("canvas", "leaflet-zoom-hide");
-    this._c.style.opacity = 0.85;
-    this._c.style.mixBlendMode = "multiply"; // shadows darken the map like real shade — streets stay readable
+    this._c.style.opacity = 0.6;
     this._c.style.pointerEvents = "none";
     m.getPanes().overlayPane.appendChild(this._c);
     m.on("moveend zoomend resize", this._reset, this);
@@ -701,35 +936,25 @@ const ShadowCanvas = L.Layer.extend({
   redraw: function () {
     const m = this._map, ctx = this._c.getContext("2d");
     ctx.clearRect(0, 0, this._c.width, this._c.height);
-    if (isNight()) return;
-    ctx.fillStyle = "#aab0c8"; // cool slate — multiplied over the map it reads as true shade
+    if (!state.trees.length) return;
+    ctx.fillStyle = "#8d8a96";
     ctx.beginPath();
-    for (const s of state.quads) {
-      const p0 = m.latLngToContainerPoint(s.q[0]);
-      ctx.moveTo(p0.x, p0.y);
-      for (let k = 1; k < 4; k++) { const p = m.latLngToContainerPoint(s.q[k]); ctx.lineTo(p.x, p.y); }
-      ctx.closePath();
+    for (const tr of state.trees) {
+      const p = m.latLngToContainerPoint([tr.lat, tr.lon]);
+      if (p.x < -20 || p.y < -20 || p.x > this._c.width + 20 || p.y > this._c.height + 20) continue;
+      const e = m.latLngToContainerPoint([tr.lat, tr.lon + (tr.cr * 0.7) / metersPerDegLon(tr.lat)]);
+      const rp = Math.max(1.3, Math.abs(e.x - p.x));
+      ctx.moveTo(p.x + rp, p.y);
+      ctx.arc(p.x, p.y, rp, 0, Math.PI * 2);
     }
-    for (const ts of state.treeShadows) {
-      const c = m.latLngToContainerPoint([ts.lat, ts.lon]);
-      const e = m.latLngToContainerPoint([ts.lat, ts.lon + ts.r / metersPerDegLon(ts.lat)]);
-      const rp = Math.max(1, Math.abs(e.x - c.x));
-      ctx.moveTo(c.x + rp, c.y);
-      ctx.arc(c.x, c.y, rp, 0, Math.PI * 2);
-    }
-    ctx.fill(); // nonzero winding: unions, never double-darkens
+    ctx.fill();
   }
 });
+// The map stays clean of shadow washes — but the trees are worth seeing.
 const shadowPaint = new ShadowCanvas();
-shadowPaint.addTo(map);
+shadowPaint.addTo(map); // paints only the city's trees
 
-function drawShadows() {
-  shadowLayer.clearLayers();
-  shadowPaint.redraw();
-  if (isNight()) return;
-  for (const b of state.buildings)
-    L.polygon(b.pts, { stroke: false, fillColor: COLOR_BUILDING, fillOpacity: 0.5, interactive: false }).addTo(shadowLayer);
-}
+function drawShadows() { shadowPaint.redraw(); }
 
 // ---------- Data ----------
 async function safeFetch(url, opts, serviceName) {
@@ -775,7 +1000,7 @@ async function fetchBuildings(bounds) {
   const p = 0.0015;
   const bbox = `${bounds.getSouth()-p},${bounds.getWest()-p},${bounds.getNorth()+p},${bounds.getEast()+p}`;
   // separate output budgets so tree-dense cities can't starve the building data
-  const query = `[out:json][timeout:30];way["building"](${bbox});out geom 3500;node["natural"="tree"](${bbox});out 1200;way["natural"="tree_row"](${bbox});out geom 300;`;
+  const query = `[out:json][timeout:30];way["building"](${bbox});out geom 3500;node["natural"="tree"](${bbox});out 1200;way["natural"="tree_row"](${bbox});out geom 300;node["highway"="crossing"](${bbox});out 900;`;
   const endpoints = [
     "https://overpass-api.de/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
@@ -790,7 +1015,7 @@ async function fetchBuildings(bounds) {
   }
   if (!r) throw lastErr;
   const j = await r.json();
-  const buildings = [], trees = [];
+  const buildings = [], trees = [], crosswalks = [];
   const treeOf = (id, lat, lon, t) => {
     let h = 8, cr = 4;
     if (t.height) { const v = parseFloat(t.height); if (!isNaN(v)) h = v; }
@@ -801,6 +1026,10 @@ async function fetchBuildings(bounds) {
     const t = el.tags || {};
     if (el.type === "node" && t.natural === "tree") {
       if (trees.length < 3000) trees.push(treeOf("n" + el.id, el.lat, el.lon, t));
+      continue;
+    }
+    if (el.type === "node" && t.highway === "crossing") {
+      crosswalks.push({ id: "c" + el.id, lat: el.lat, lon: el.lon });
       continue;
     }
     if (!el.geometry || el.geometry.length < 2) continue;
@@ -821,7 +1050,7 @@ async function fetchBuildings(bounds) {
     buildings.push({ id: el.id, pts: el.geometry.map(g => [g.lat, g.lon]), h });
   }
   // if we hit the server's output budget, parts of this view are silently missing
-  return { buildings, trees, truncated: buildings.length >= BUILDING_BUDGET - 100 };
+  return { buildings, trees, crosswalks, truncated: buildings.length >= BUILDING_BUDGET - 100 };
 }
 
 // Accumulate city data across fetches — explored areas keep their shadows.
@@ -832,14 +1061,19 @@ function mergeCityData(f) {
   const tm = new Map(state.trees.map(x => [x.id, x]));
   for (const x of f.trees) tm.set(x.id, x);
   let tl = [...tm.values()];
+  const cm = new Map(state.crosswalks.map(x => [x.id, x]));
+  for (const x of (f.crosswalks || [])) cm.set(x.id, x);
+  let cl = [...cm.values()];
   if (bl.length > 8000) { // prune far-off data to stay fast
     const keep = map.getBounds().pad(1);
     bl = bl.filter(x => keep.contains(x.pts[0]));
     tl = tl.filter(x => keep.contains([x.lat, x.lon]));
+    cl = cl.filter(x => keep.contains([x.lat, x.lon]));
     state.areaBounds = null;
   }
   state.buildings = bl;
   state.trees = tl;
+  state.crosswalks = cl;
 }
 
 async function fetchWeather() {
@@ -858,6 +1092,7 @@ map.on("moveend zoomend", () => {
 });
 
 async function maybeShadeArea() {
+  return; // area shading disabled — shade data now loads with the route, keeping the map clean and the network quiet
   if (state.busy || state.navigating) return;
   if (map.getZoom() < AREA_SHADE_MIN_ZOOM) return;
   const b = map.getBounds();
@@ -1035,14 +1270,15 @@ function drawSunMarker() {
     const mdLat = Math.cos(mBrg) * (mb.getNorth() - mb.getSouth()) * 0.36;
     const mdLon = Math.sin(mBrg) * (mb.getEast() - mb.getWest()) * 0.36;
     const ill = SunCalc.getMoonIllumination(state.when);
-    const phases = ["🌑","🌒","🌓","🌔","🌕","🌖","🌗","🌘"];
-    const glyph = phases[Math.round(ill.phase * 8) % 8];
     const moonHtml = `<div style="text-align:center;width:130px">
-      <div style="font-size:38px;line-height:44px;filter:drop-shadow(0 1px 5px rgba(0,0,0,.55))">${glyph}</div>
-      <div style="font:700 10.5px Arial,sans-serif;color:#e9e3d7;margin-top:1px">${t("moonLabel")(Math.round(ill.fraction * 100))}</div>
+      <svg width="42" height="40" viewBox="0 0 44 40" style="filter:drop-shadow(0 1px 4px rgba(0,0,0,.45))">
+        <defs><mask id="crM"><rect width="44" height="40" fill="#fff"/><circle cx="28.5" cy="14.5" r="11" fill="#000"/></mask></defs>
+        <circle cx="22" cy="20" r="13" fill="#ece6da" mask="url(#crM)"/>
+      </svg>
+      <div style="font:700 10.5px Arial,sans-serif;color:#e9e3d7;margin-top:2px">${t("moonLabel")(Math.round(ill.fraction * 100))}</div>
     </div>`;
     L.marker([mc.lat + mdLat, mc.lng + mdLon], {
-      icon: L.divIcon({ html: moonHtml, className: "sunIcon", iconSize: [130, 66], iconAnchor: [65, 22] }),
+      icon: L.divIcon({ html: moonHtml, className: "sunIcon", iconSize: [130, 66], iconAnchor: [65, 20] }),
       interactive: true, zIndexOffset: 900
     }).bindTooltip(t("moonTip")).addTo(sunLayer);
     return;
@@ -1062,31 +1298,38 @@ function drawSunMarker() {
   const glowO = ((0.2 + 0.55 * strength) * cf).toFixed(2);
   const hot = uv != null && uv >= 8;
   const veiled = cc != null && cc >= 85;
-  // the sun emoji, exactly as iOS renders it; behind clouds it becomes ⛅
-  const glyph = veiled ? "⛅" : "☀️";
+  // golden disc in a spiky corona with a white gap ring
+  const sunCol = veiled ? "#c4b78e" : hot ? "#ef8c1e" : "#f5a81c";
   const label = deg < 20 ? t("sunLow") : deg < 50 ? t("sunMid") : t("sunHigh");
   const sub = veiled ? t("veiled") : (uv != null ? "UV " + Math.round(uv * 10) / 10 : "");
+  // corona: 10 sharp points joined by concave arcs
+  const P = 10, R2 = 22, Rin = 14, cx0 = 24, cy0 = 24;
+  let corona = "";
+  for (let k = 0; k < P; k++) {
+    const a = (k / P) * 2 * Math.PI - Math.PI / 2;
+    const a2 = ((k + 1) / P) * 2 * Math.PI - Math.PI / 2;
+    const amid = a + Math.PI / P;
+    corona += (k ? "L" : "M") + (cx0 + R2 * Math.cos(a)).toFixed(1) + " " + (cy0 + R2 * Math.sin(a)).toFixed(1) +
+      " Q" + (cx0 + Rin * Math.cos(amid)).toFixed(1) + " " + (cy0 + Rin * Math.sin(amid)).toFixed(1) + " " +
+      (cx0 + R2 * Math.cos(a2)).toFixed(1) + " " + (cy0 + R2 * Math.sin(a2)).toFixed(1) + " ";
+  }
+  corona += "Z";
   const sunHtml = `<div style="text-align:center;width:130px">
-    <div style="font-size:42px;line-height:48px;filter:drop-shadow(0 1px 3px rgba(0,0,0,.3));opacity:${(0.72 + 0.28 * cf).toFixed(2)}">${glyph}</div>
-    <div style="font:700 10.5px Arial,sans-serif;color:#2e2e38;margin-top:1px">${label}</div>
+    <svg width="48" height="48" viewBox="0 0 48 48" style="filter:drop-shadow(0 1px 3px rgba(0,0,0,.25))">
+      <path d="${corona}" fill="${sunCol}"${veiled ? ' opacity=".75"' : ""}/>
+      <circle cx="24" cy="24" r="14.5" fill="#fffdf6"/>
+      <circle cx="24" cy="24" r="12" fill="${sunCol}"/>
+    </svg>
+    <div style="font:700 10.5px Arial,sans-serif;color:#2e2e38;margin-top:2px">${label}</div>
     ${sub ? `<div style="font:600 10px Arial,sans-serif;color:#6b6353;margin-top:1px">${sub}</div>` : ""}
   </div>`;
   L.marker(sunPos, {
-    icon: L.divIcon({ html: sunHtml, className: "sunIcon", iconSize: [130, 84], iconAnchor: [65, 24] }),
+    icon: L.divIcon({ html: sunHtml, className: "sunIcon", iconSize: [130, 86], iconAnchor: [65, 23] }),
     interactive: true, zIndexOffset: 900
   }).bindTooltip(t("sunTip")(deg)).addTo(sunLayer);
-  // the light's direction: dotted beam, bold at the sun, thinning across the city,
-  // each dot on a dark casing so it reads on any background
+  // the light's direction: one quiet meridian line through the city
   const rayEnd = [c.lat - dLat * 1.05, c.lng - dLon * 1.05];
-  const SEGS = 8;
-  for (let k = 0; k < SEGS; k++) {
-    const f0 = k / SEGS, f1 = (k + 1) / SEGS;
-    const p0 = [sunPos[0] + (rayEnd[0] - sunPos[0]) * f0, sunPos[1] + (rayEnd[1] - sunPos[1]) * f0];
-    const p1 = [sunPos[0] + (rayEnd[0] - sunPos[0]) * f1, sunPos[1] + (rayEnd[1] - sunPos[1]) * f1];
-    const w = Math.max(8 - k, 1.6);
-    L.polyline([p0, p1], { color: "#2e2e38", weight: w + 2.6, opacity: Math.max(0.5 - k * 0.04, 0.22), dashArray: "0.1 13", lineCap: "round", interactive: false }).addTo(sunLayer);
-    L.polyline([p0, p1], { color: "#f5b95e", weight: w, opacity: Math.max(0.95 - k * 0.07, 0.4), dashArray: "0.1 13", lineCap: "round", interactive: false }).addTo(sunLayer);
-  }
+  L.polyline([sunPos, rayEnd], { color: "#d9a44e", weight: 1.5, opacity: Math.min(0.2 + 0.4 * cf, 0.55), interactive: false }).addTo(sunLayer);
 }
 map.on("moveend zoomend", drawSunMarker);
 
@@ -1165,7 +1408,7 @@ function startTracking() {
       firstFix = false;
       map.setView(ll, 16);
       status(t("foundYou"));
-      fetchWeather().then(w => { if (w) { state.weather = w; renderWeather(); refresh(); } });
+      fetchWeather().then(w => { if (w) { state.weather = w; renderWeather(); refresh(); maybeShowBrief(); } });
       updateSliderGradient();
     }
     updateProgress();
@@ -1176,8 +1419,16 @@ function startTracking() {
 }
 
 function updateProgress() {
-  if (!ready() || !state.pos) { $("navCard").style.display = "none"; return; }
+  if (!ready()) { $("navCard").style.display = "none"; return; }
+  $("navCard").style.display = "";
   const r = state.routes[state.selIdx ?? state.bestIdx];
+  if (!state.pos) {
+    // no GPS yet — show the trip summary and the Start button anyway
+    $("navText").innerHTML = t("remain")(Math.round(r.duration / 60), (r.distance / 1000).toFixed(2));
+    $("navSub").textContent = t("ahead")((isNight() ? 0 : r.sunMin).toFixed(1), 0);
+    $("navBar").style.width = "0%";
+    return;
+  }
   let bi = 0, bd = Infinity;
   for (let i = 0; i < r.samples.length; i++) {
     const d = dist(r.samples[i], state.pos);
@@ -1194,11 +1445,45 @@ function updateProgress() {
   } else if (remain < 20) {
     $("navText").innerHTML = t("arrived");
     $("navSub").textContent = t("crypt");
+    if (!state.arrivedShown && state.navMode) {
+      state.arrivedShown = true;
+      const fast = state.routes.reduce((a, b) => a.duration < b.duration ? a : b);
+      const saved = Math.max(0, (fast.sunMin || 0) - r.sunMin).toFixed(1);
+      $("acTitle").textContent = isNight() ? t("acNightTitle") : t("acTitle");
+      $("acStats").innerHTML = t("acStats")((r.distance / 1000).toFixed(2), Math.round(r.duration / 60), isNight() ? "0" : r.sunMin.toFixed(1), saved);
+      $("arriveCard").style.display = "flex";
+    }
   } else {
-    $("navText").innerHTML = t("remain")(mins, (remain/1000).toFixed(2));
+    const arr = fmtTime(new Date(Date.now() + remain / speed() * 1000));
+    $("navText").innerHTML = t("remain")(mins, (remain/1000).toFixed(2)) + ` · ${t("arrAt")(arr)}`;
     const sunLeft = isNight() ? 0 : (1 - r.shadeFrac) * remain / speed() / 60;
     $("navSub").textContent = t("ahead")(sunLeft.toFixed(1), Math.round(covered / r.distance * 100));
   }
+  // light-based guidance: the Dracula equivalent of "turn left in 200 m"
+  let dir = "";
+  if (state.navMode && r.sides && bd <= 60 && remain >= 20 && !isNight()) {
+    let nextSwitch = -1, nextSun = -1, sunLen = 0;
+    const maxJ = Math.min(r.samples.length, bi + 1 + 180);
+    for (let j = bi + 1; j < maxJ; j++) {
+      if (nextSwitch < 0 && r.sides[j] !== r.sides[j - 1]) nextSwitch = j;
+      if (nextSun < 0) {
+        const p = r.sides[j] === "L" ? r.offL[j] : r.offR[j];
+        if (!inShade(p[0], p[1])) {
+          nextSun = j;
+          let k = j;
+          while (k < r.samples.length - 1) { const q = r.sides[k] === "L" ? r.offL[k] : r.offR[k]; if (inShade(q[0], q[1])) break; k++; }
+          sunLen = Math.max(10, Math.round((k - j) * SAMPLE_STEP / 10) * 10);
+        }
+      }
+      if (nextSwitch >= 0 && nextSun >= 0) break;
+    }
+    const rd = x => Math.max(10, Math.round(x * SAMPLE_STEP / 10) * 10);
+    if (nextSwitch > 0 && (nextSun < 0 || nextSwitch <= nextSun)) dir = `<span class="ic">↔</span>` + t("navCross")(rd(nextSwitch - bi));
+    else if (nextSun > 0) dir = `<span class="ic">☀</span>` + t("navSunAhead")(rd(nextSun - bi), sunLen);
+    else dir = `<span class="ic">☂</span>` + t("navShadeAhead")(rd(maxJ - bi));
+  }
+  $("navDir").innerHTML = dir;
+  $("navDir").style.display = dir ? "block" : "none";
   $("navBar").style.width = Math.round(covered / r.distance * 100) + "%";
 }
 
@@ -1216,12 +1501,12 @@ function drawRoutes() {
   for (const idx of order) {
     const r = state.routes[idx];
     if (idx !== focus) {
-      L.polyline(r.coords, { color: "#ffffff", weight: 8, opacity: 0.75 }).addTo(routeLayer);
+      L.polyline(r.coords, { color: "#f7f3ea", weight: 8, opacity: 0.75 }).addTo(routeLayer);
       L.polyline(r.coords, { color: "#8a8478", weight: 4.5, opacity: 0.7 }).addTo(routeLayer);
       continue;
     }
     if (night || !r.sides) {
-      L.polyline(r.coords, { color: "#ffffff", weight: 11, opacity: 0.9 }).addTo(routeLayer);
+      L.polyline(r.coords, { color: "#f7f3ea", weight: 11, opacity: 0.9 }).addTo(routeLayer);
       L.polyline(r.coords, { color: "#211f26", weight: 7, opacity: 1 }).addTo(routeLayer);
       continue;
     }
@@ -1232,7 +1517,7 @@ function drawRoutes() {
     let run = [pt(0)], runSunny = sunnyAt(0), runSide = r.sides[0];
     const flush = () => {
       if (run.length > 1) {
-        L.polyline(run, { color: "#ffffff", weight: 11, opacity: 0.9 }).addTo(routeLayer);
+        L.polyline(run, { color: "#f7f3ea", weight: 11, opacity: 0.9 }).addTo(routeLayer);
         // same language as the legend: signature graphite = shadow, amber = sun
         L.polyline(run, { color: runSunny ? sunCol : COLOR_SHADE, weight: 7, opacity: 1 }).addTo(routeLayer);
       }
@@ -1241,7 +1526,13 @@ function drawRoutes() {
       const sSunny = sunnyAt(i), sSide = r.sides[i];
       if (sSide !== runSide) {
         flush();
-        L.circleMarker(r.samples[i], { radius: 4.5, color: COLOR_SHADE, fillColor: "#ffffff", fillOpacity: 1, weight: 1.5 })
+        // snap the crossing to a real mapped crosswalk when one is within 45 m
+        let cp = r.samples[i], bestD = 45;
+        for (const cw of state.crosswalks) {
+          const d = dist([cw.lat, cw.lon], r.samples[i]);
+          if (d < bestD) { bestD = d; cp = [cw.lat, cw.lon]; }
+        }
+        L.circleMarker(cp, { radius: 4.5, color: COLOR_SHADE, fillColor: "#ffffff", fillOpacity: 1, weight: 1.5 })
           .bindTooltip("Cross here — the shade switches sides").addTo(routeLayer);
         run = [pt(i)]; runSunny = sSunny; runSide = sSide;
       } else if (sSunny !== runSunny) {
@@ -1291,6 +1582,7 @@ function renderPanel() {
     d.addEventListener("click", () => {
       state.selIdx = i;
       state.selManual = true;
+      map.fitBounds(L.latLngBounds(r.coords).pad(0.2)); // show me the route I chose
       drawRoutes();
       renderPanel();
       updateProgress();
@@ -1311,7 +1603,7 @@ function renderSunInfo() {
   $("sunInfo").textContent = sun.altitude <= 0.01
     ? t("nightAll")
     : t("horizon")((sun.altitude*180/Math.PI).toFixed(0));
-  $("timeDate").textContent = state.when.toLocaleDateString(state.lang === "nl" ? "nl-NL" : state.lang === "ko" ? "ko-KR" : undefined, { weekday: "short", month: "short", day: "numeric" });
+  $("timeDate").textContent = state.when.toLocaleDateString(state.lang === "nl" ? "nl-NL" : state.lang === "ko" ? "ko-KR" : state.lang === "zh" ? "zh-CN" : undefined, { weekday: "short", month: "short", day: "numeric" });
   // countdown to the vampire hours
   const cc0 = state.start || map.getCenter();
   const times = SunCalc.getTimes(state.when, cc0.lat, cc0.lng);
@@ -1386,20 +1678,69 @@ function setPoint(which, latlng, label) {
   const input = $(which + "Input");
   input.value = label;
   input.dataset.geo = label;
+  if (which === "end") {
+    document.body.classList.remove("homeUI"); // destination chosen — reveal the full app
+    if (!label.startsWith("📍") && !label.startsWith("🧛")) saveRecent(label, latlng);
+  }
   redrawMarkers();
 }
 
+// remember where you've been — recents pop up when the destination box is focused
+function saveRecent(label, ll) {
+  try {
+    const r = JSON.parse(localStorage.getItem("drac_recents") || "[]").filter(x => x.label !== label);
+    r.unshift({ label, lat: ll.lat, lng: ll.lng });
+    localStorage.setItem("drac_recents", JSON.stringify(r.slice(0, 5)));
+  } catch (e) {}
+}
+
+function showRecents() {
+  let r = [];
+  try { r = JSON.parse(localStorage.getItem("drac_recents") || "[]"); } catch (e) {}
+  if (!r.length) return;
+  const box = $("endSuggest");
+  box.innerHTML = "";
+  for (const it of r) {
+    const d = document.createElement("div");
+    d.textContent = "↺ " + it.label;
+    d.addEventListener("mousedown", ev => {
+      ev.preventDefault();
+      setPoint("end", L.latLng(it.lat, it.lng), it.label);
+      box.style.display = "none";
+      status(t("destSet"));
+      if (state.start || state.pos) plan();
+    });
+    box.appendChild(d);
+  }
+  box.style.display = "";
+}
+$("endInput").addEventListener("focus", () => { if ($("endInput").value.trim().length < 3) showRecents(); });
+$("endInput").addEventListener("input", () => { $("endClear").style.display = $("endInput").value ? "block" : "none"; });
+$("endClear").addEventListener("click", () => {
+  $("endInput").value = ""; delete $("endInput").dataset.geo;
+  state.end = null; redrawMarkers();
+  $("endClear").style.display = "none";
+  $("endInput").focus(); showRecents();
+});
+
 function redrawMarkers() {
   markerLayer.clearLayers();
-  if (state.start) L.circleMarker(state.start, { radius: 8, color: "#1f5132", fillColor: "#2c7a4b", fillOpacity: 0.95, weight: 2 }).addTo(markerLayer).bindTooltip("Start");
-  if (state.end) L.circleMarker(state.end, { radius: 8, color: "#6d1624", fillColor: "#8e1f2f", fillOpacity: 0.95, weight: 2 }).addTo(markerLayer).bindTooltip("Destination");
+  // on-palette: start = ink ring on bone, destination = blood dot in bone ring
+  if (state.start) L.circleMarker(state.start, { radius: 7, color: "#211f26", weight: 2.5, fillColor: "#f7f3ea", fillOpacity: 1 }).addTo(markerLayer).bindTooltip("Start");
+  if (state.end) L.circleMarker(state.end, { radius: 7.5, color: "#f7f3ea", weight: 2, fillColor: "#8e1f2f", fillOpacity: 1 }).addTo(markerLayer).bindTooltip("Destination");
 }
 
 map.on("click", e => {
   if (state.busy) return;
-  const label = e.latlng.lat.toFixed(5) + ", " + e.latlng.lng.toFixed(5);
-  if (!state.start) { setPoint("start", e.latlng, "📍 " + label); status(t("startSet")); }
-  else if (!state.end) { setPoint("end", e.latlng, "📍 " + label); status(t("destSet")); }
+  document.body.classList.remove("homeUI");
+  const label = "📍 " + e.latlng.lat.toFixed(5) + ", " + e.latlng.lng.toFixed(5);
+  // Google's grammar: a tap on the map means "take me there"
+  if (!state.end && (state.start || state.pos)) {
+    if (!state.start && state.pos) setPoint("start", L.latLng(state.pos[0], state.pos[1]), t("myLocation"));
+    setPoint("end", e.latlng, label);
+    plan();
+  } else if (!state.start) { setPoint("start", e.latlng, label); status(t("startSet")); }
+  else if (!state.end) { setPoint("end", e.latlng, label); plan(); }
 });
 
 function setMode(m) {
@@ -1417,11 +1758,17 @@ $("startInput").addEventListener("keydown", e => { if (e.key === "Enter") plan()
 $("endInput").addEventListener("keydown", e => { if (e.key === "Enter") plan(); });
 
 $("nowBtn").addEventListener("click", () => setTime(new Date()));
-$("timeSlider").addEventListener("input", e => {
-  const mins = +e.target.value;
-  const d = new Date(state.when);
-  d.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
-  setTime(d);
+// throttled: dragging the slider recomputes at most ~14×/second instead of per-pixel
+let sliderTimer = null;
+$("timeSlider").addEventListener("input", () => {
+  if (sliderTimer) return;
+  sliderTimer = setTimeout(() => {
+    sliderTimer = null;
+    const mins = +$("timeSlider").value;
+    const d = new Date(state.when);
+    d.setHours(Math.floor(mins / 60), mins % 60, 0, 0);
+    setTime(d);
+  }, 70);
 });
 
 $("swapBtn").addEventListener("click", () => {
@@ -1444,6 +1791,7 @@ $("clearBtn").addEventListener("click", () => {
   markerLayer.clearLayers(); routeLayer.clearLayers();
   $("routes").innerHTML = ""; $("navCard").style.display = "none";
   hideErr();
+  document.body.classList.add("homeUI"); // back to "where are you going?"
   status(t("cleared"));
 });
 
@@ -1464,8 +1812,20 @@ $("locateBtn").addEventListener("click", () => {
 $("langEN").addEventListener("click", () => setLang("en"));
 $("langNL").addEventListener("click", () => setLang("nl"));
 $("langKO").addEventListener("click", () => setLang("ko"));
+$("langZH").addEventListener("click", () => setLang("zh"));
 
 $("sheetHandle").addEventListener("click", () => document.body.classList.toggle("sheetCollapsed"));
+
+$("recenterBtn").addEventListener("click", () => {
+  if (state.pos) map.setView(state.pos, Math.max(map.getZoom(), 17), { animate: true });
+});
+
+$("acBtn").addEventListener("click", () => {
+  $("arriveCard").style.display = "none";
+  state.navMode = false;
+  document.body.classList.remove("navModeUI");
+  $("navToggle").textContent = t("startNav");
+});
 
 // Navigation mode: map takes over and follows you
 $("navToggle").addEventListener("click", () => {
@@ -1485,6 +1845,7 @@ async function plan() {
   try {
     state.busy = true;
     $("goBtn").disabled = true;
+    $("goBtn").textContent = "…";
 
     const sIn = $("startInput"), eIn = $("endInput");
     if (sIn.value.trim() && sIn.value !== sIn.dataset.geo) {
@@ -1500,9 +1861,11 @@ async function plan() {
     if (!state.start && state.pos) setPoint("start", L.latLng(state.pos[0], state.pos[1]), t("myLocation"));
     if (!state.start || !state.end) { status(t("needBoth")); return; }
 
+    showSeeking();
     status(t("charting"));
     routeLayer.clearLayers();
     state.selIdx = null; state.selManual = false;
+    state.arrivedShown = false;
     state.routes = await fetchRoutes();
     const bounds = L.latLngBounds(state.routes.flatMap(r => r.coords));
     map.fitBounds(bounds.pad(0.15));
@@ -1515,6 +1878,7 @@ async function plan() {
 
     status(t("readingSky"));
     state.weather = await fetchWeather();
+    maybeShowBrief();
 
     status(state.buildings.length ? "" : t("noDataRoute"));
     refresh();
@@ -1523,13 +1887,115 @@ async function plan() {
     status("");
     showErr(err.message);
   } finally {
+    hideSeeking();
     state.busy = false;
     $("goBtn").disabled = false;
+    $("goBtn").textContent = t("go");
+    $("sidebar").scrollTop = 0; // results always land in view
   }
 }
 
+// the moment between asking and knowing — a bat and a rotating incantation
+let seekTimer = null;
+function showSeeking() {
+  $("routes").innerHTML = "";
+  $("navCard").style.display = "none";
+  const el = $("seeking");
+  el.style.display = "block";
+  const ph = t("seekPhrases");
+  let i = 0;
+  const sp = $("seekPhrase");
+  sp.style.opacity = 1;
+  sp.textContent = ph[0];
+  clearInterval(seekTimer);
+  seekTimer = setInterval(() => {
+    i = (i + 1) % ph.length;
+    sp.style.opacity = 0;
+    setTimeout(() => { sp.textContent = ph[i]; sp.style.opacity = 1; }, 240);
+  }, 1150);
+}
+function hideSeeking() {
+  clearInterval(seekTimer);
+  seekTimer = null;
+  $("seeking").style.display = "none";
+}
+
+// ---------- Daily brief: one considerate word before you step out ----------
+const PAGE_T0 = Date.now();
+function maybeShowBrief() {
+  const force = location.search.indexOf("brief") >= 0; // ?brief=1 to preview any time
+  try { if (!force && localStorage.getItem("drac_brief") === new Date().toDateString()) return; } catch (e) {}
+  if (!state.weather) return;
+  const hh = state.weather.hourly;
+  const today = new Date().toDateString();
+  let maxUv = 0, rain = 0;
+  for (let i = 0; i < hh.time.length; i++) {
+    const d = new Date(hh.time[i]);
+    if (d.toDateString() !== today) continue;
+    maxUv = Math.max(maxUv, hh.uv_index[i] || 0);
+    const dt = d - Date.now();
+    if (dt > -3600000 && dt < 6 * 3600000 && hh.precipitation) rain = Math.max(rain, hh.precipitation[i] || 0);
+  }
+  const cc = currentCloud();
+  let key, shades = false;
+  if (isNight()) key = "briefNight";
+  else if (rain > 0.2) key = "briefRain";
+  else if (maxUv >= 7) { key = "briefUvHigh"; shades = true; }
+  else if (cc != null && cc >= 85) key = "briefCloud";
+  else if (maxUv >= 4) { key = "briefUvMid"; shades = true; }
+  else key = "briefUvLow";
+  $("briefTitle").textContent = t("briefTitle");
+  $("briefText").textContent = t(key);
+  let why = "";
+  if (key === "briefNight") {
+    const c0 = state.start || map.getCenter();
+    let sr = SunCalc.getTimes(new Date(), c0.lat, c0.lng).sunrise;
+    if (!(sr instanceof Date) || sr <= new Date()) { const tm = new Date(); tm.setDate(tm.getDate() + 1); sr = SunCalc.getTimes(tm, c0.lat, c0.lng).sunrise; }
+    if (sr instanceof Date && !isNaN(sr)) why = t("briefWhyNight")(fmtTime(sr));
+  } else if (key === "briefRain") why = t("briefWhyRain")(rain.toFixed(1));
+  else if (key === "briefCloud") why = t("briefWhyCloud")(Math.round(cc));
+  else why = t("briefWhyUv")(maxUv.toFixed(1));
+  $("briefWhy").textContent = why;
+  $("briefBtn").textContent = t("briefBtn");
+  $("briefShades").style.display = shades ? "" : "none";
+  setTimeout(() => { $("briefCard").style.display = "flex"; }, Math.max(0, 3200 - (Date.now() - PAGE_T0)));
+  try { localStorage.setItem("drac_brief", today); } catch (e) {}
+}
+$("briefBtn").addEventListener("click", () => { $("briefCard").style.display = "none"; });
+
+// ---------- Ambient bats: now and then, one crosses the city ----------
+function spawnBat() {
+  if (document.hidden) return;
+  const m = $("map");
+  const b = document.createElement("div");
+  b.textContent = "\u{1F987}";
+  const size = 14 + Math.random() * 13;
+  const startY = 8 + Math.random() * 55;
+  const drift = (Math.random() - 0.5) * 24;
+  const fromLeft = Math.random() < 0.5;
+  b.style.cssText = `position:absolute;${fromLeft ? "left:-44px" : "right:-44px"};top:${startY}%;font-size:${size}px;z-index:800;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));${fromLeft ? "" : "transform:scaleX(-1);"}`;
+  m.appendChild(b);
+  const w = m.clientWidth + 90;
+  const dx = fromLeft ? w : -w;
+  b.animate([
+    { transform: `${fromLeft ? "" : "scaleX(-1) "}translate(0,0) rotate(-6deg)` },
+    { transform: `${fromLeft ? "" : "scaleX(-1) "}translate(${dx * (fromLeft ? 0.5 : 0.5)}px, ${drift * 0.5}vh) rotate(6deg)` },
+    { transform: `${fromLeft ? "" : "scaleX(-1) "}translate(${dx}px, ${drift}vh) rotate(-5deg)` }
+  ], { duration: 7000 + Math.random() * 4500, easing: "ease-in-out" }).onfinish = () => b.remove();
+}
+// the flock greets you as the map appears
+[3000, 3450, 3900, 4500, 5200, 6100].forEach(ms => setTimeout(spawnBat, ms));
+setInterval(() => {
+  if (Math.random() < 0.55) {
+    spawnBat();
+    if (Math.random() < 0.35) setTimeout(spawnBat, 700); // sometimes they travel in pairs
+    if (Math.random() < 0.15) setTimeout(spawnBat, 1400); // or threes
+  }
+}, 32000);
+
 // ---------- Init ----------
 setTimeout(() => { const sp = $("splash"); if (sp) sp.remove(); }, 2900);
+document.body.classList.add("homeUI"); // launch like Google Maps: one question
 applyStatic();
 setTime(new Date());
 status(t("locating"));
