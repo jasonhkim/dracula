@@ -196,7 +196,7 @@
   #navDir .ic { color: var(--brass); margin-right: 7px; }
   #recenterBtn { display: none; }
   body.navModeUI #recenterBtn { display: flex; position: fixed; right: 14px; bottom: 20px; z-index: 1600; width: 48px; height: 48px; border-radius: 50%; background: var(--card); color: var(--text); border: 1px solid var(--hairline); font-size: 1.5rem; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.3); padding: 0; min-height: 0; }
-  #navToggle { width: 100%; margin-top: 12px; background: var(--brass); color: #1a1512; }
+  #navToggle { width: 100%; margin-top: 12px; padding: 14px; font-size: 0.82rem; letter-spacing: 0.2em; background: var(--brass); color: #1a1512; box-shadow: 0 3px 12px rgba(185,154,91,.4); }
   #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
 
   /* Arrival card */
@@ -231,6 +231,7 @@
     #sheetHandle { display: block; text-align: center; padding: 2px 0 10px; cursor: pointer; }
     #sheetHandle span { display: inline-block; width: 44px; height: 5px; border-radius: 3px; background: var(--hairline); }
     body.sheetCollapsed #sidebar { height: 30vh; }
+    body.sheetCollapsed #navCard { order: 1; } /* Start is the first thing under the handle */
     body.sheetCollapsed #map { height: 70vh; }
     body.sheetCollapsed .brand, body.sheetCollapsed .tagline, body.sheetCollapsed .langRow,
     body.sheetCollapsed #routeCard, body.sheetCollapsed #lightCard, body.sheetCollapsed .legend,
@@ -461,7 +462,7 @@ const STR = {
     yourWalk: "Your route", to: "To", from: "From",
     endPh: "Where are you going?", startPh: "My location (automatic)",
     walk: "Walk", bike: "Bike", go: "Find the Shade Route",
-    locate: "Locate me", clear: "Clear",
+    locate: "Locate me", clear: "Clear", goBusy: "Finding shade…",
     mapTip: "Tip: you can also tap the map — first tap sets the start, second the destination.",
     light: "Light", backNow: "Back to now", conditions: "Conditions here · now",
     cloud: "Cloud", temp: "Temp",
@@ -544,7 +545,7 @@ const STR = {
     yourWalk: "Jouw route", to: "Naar", from: "Van",
     endPh: "Waar ga je heen?", startPh: "Mijn locatie (automatisch)",
     walk: "Lopen", bike: "Fietsen", go: "Vind de schaduwroute",
-    locate: "Vind mij", clear: "Wissen",
+    locate: "Vind mij", clear: "Wissen", goBusy: "Schaduw zoeken…",
     mapTip: "Tip: tik op de kaart — de eerste tik is je start, de tweede je bestemming.",
     light: "Licht", backNow: "Terug naar nu", conditions: "Nu · hier",
     cloud: "Wolken", temp: "Temp",
@@ -627,7 +628,7 @@ const STR = {
     yourWalk: "경로", to: "도착", from: "출발",
     endPh: "어디로 가세요?", startPh: "내 위치 (자동)",
     walk: "도보", bike: "자전거", go: "그늘 경로 찾기",
-    locate: "내 위치", clear: "지우기",
+    locate: "내 위치", clear: "지우기", goBusy: "그늘 찾는 중…",
     mapTip: "팁: 지도를 탭해도 됩니다 — 첫 탭은 출발지, 두 번째 탭은 도착지.",
     light: "빛", backNow: "지금으로", conditions: "현재 · 여기",
     cloud: "구름", temp: "기온",
@@ -710,7 +711,7 @@ const STR = {
     yourWalk: "路线", to: "目的地", from: "出发地",
     endPh: "你要去哪里？", startPh: "我的位置（自动）",
     walk: "步行", bike: "骑行", go: "寻找遮荫路线",
-    locate: "定位我", clear: "清除",
+    locate: "定位我", clear: "清除", goBusy: "寻找阴影中…",
     mapTip: "提示：也可以点击地图——第一次点击设起点，第二次设终点。",
     light: "光线", backNow: "回到现在", conditions: "此刻 · 此地",
     cloud: "云量", temp: "气温",
@@ -1420,7 +1421,7 @@ function startTracking() {
 
 function updateProgress() {
   if (!ready()) { $("navCard").style.display = "none"; return; }
-  $("navCard").style.display = "";
+  $("navCard").style.display = "block"; // "" would fall back to the stylesheet's display:none
   const r = state.routes[state.selIdx ?? state.bestIdx];
   if (!state.pos) {
     // no GPS yet — show the trip summary and the Start button anyway
@@ -1437,7 +1438,7 @@ function updateProgress() {
   const covered = Math.min(bi * SAMPLE_STEP, r.distance);
   const remain = Math.max(r.distance - covered, 0);
   const mins = Math.max(0, Math.round(remain / speed() / 60));
-  $("navCard").style.display = "";
+  $("navCard").style.display = "block";
   state.navigating = bd <= 60;
   if (bd > 60) {
     $("navText").innerHTML = t("offRoute")(Math.round(bd));
@@ -1845,7 +1846,7 @@ async function plan() {
   try {
     state.busy = true;
     $("goBtn").disabled = true;
-    $("goBtn").textContent = "…";
+    $("goBtn").textContent = t("goBusy");
 
     const sIn = $("startInput"), eIn = $("endInput");
     if (sIn.value.trim() && sIn.value !== sIn.dataset.geo) {
