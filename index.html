@@ -144,7 +144,7 @@
   #status { font-family: Georgia, serif; font-style: italic; font-size: 0.82rem; color: var(--muted); min-height: 1.2em; margin-bottom: 12px; text-align: center; }
 
   /* Walking card */
-  #navCard { display: none; background: var(--ink); color: var(--bone); border-radius: 14px; padding: 14px 16px; margin: 14px 0; border: 1px solid #000; }
+  #navCard { display: none; background: var(--ink); color: var(--bone); border-radius: 14px; padding: 14px 16px; margin: 14px 0; border: 1px solid #000; position: sticky; bottom: 6px; z-index: 30; box-shadow: 0 -6px 18px rgba(12,12,17,.18); }
   #navCard h2 { color: var(--brass); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.18em; margin-bottom: 7px; font-weight: 700; }
   #navText { font-size: 0.95rem; }
   #navText b { font-size: 1.45rem; font-variant-numeric: tabular-nums; }
@@ -213,6 +213,7 @@
   body.navModeUI #recenterBtn { display: flex; position: fixed; right: 14px; bottom: 20px; z-index: 1600; width: 48px; height: 48px; border-radius: 50%; background: var(--card); color: var(--text); border: 1px solid var(--hairline); font-size: 1.5rem; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.3); padding: 0; min-height: 0; }
   #navToggle { width: 100%; margin-top: 12px; padding: 14px; font-size: 0.82rem; letter-spacing: 0.2em; background: var(--brass); color: #1a1512; box-shadow: 0 3px 12px rgba(185,154,91,.4); }
   #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
+  body.navModeUI .leaflet-top.leaflet-left, body.navModeUI .leaflet-control-zoom { display: none !important; }
 
   /* Arrival card */
   #arriveCard, #briefCard { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(12,12,17,.55); align-items: center; justify-content: center; padding: 20px; }
@@ -254,6 +255,7 @@
     input[type=text] { font-size: 16px; } /* prevents iOS focus zoom */
     button { min-height: 44px; }
     .langBtn { min-height: 0; }
+    body.navModeUI #sidebar { height: auto !important; } /* nav bar hugs the true bottom */
   }
 </style>
 </head>
@@ -515,7 +517,7 @@ const STR = {
     navCross: d => `Cross the street in ${d} m`,
     navShadeAhead: d => `Shade for the next ${d} m — stay on this side`,
     navSunAhead: (d, l) => `Sun in ${d} m — ${l} m of it`,
-    arrAt: s => `arrive ${s}`,
+    arrAt: s => `⚑ <b>${s}</b>`,
     acTitle: "You survived the sun", acNightTitle: "The night was yours",
     acStats: (km, min, sun, saved) => `${km} km · ${min} min · only ${sun} min of direct sun${parseFloat(saved) > 0.2 ? `<br>You dodged ${saved} min vs the fastest route` : ""}`,
     acDone: "Done",
@@ -551,7 +553,7 @@ const STR = {
     myLocation: "🧛🏻 My location",
     offRoute: m => `You're <b>${m} m</b> from the route`, backLine: "Return to the shaded line 🧛🏻",
     arrived: "<b>Arrived.</b> 🧛🏻", crypt: "Back to the crypt.",
-    remain: (m, km) => `<b>${m} min</b> · ${km} km left`,
+    remain: (m, km) => `<b>${m} min</b> · ${km} km`,
     ahead: (s, p) => `~${s} min of direct sun ahead · ${p}% done`
   },
   nl: {
@@ -599,7 +601,7 @@ const STR = {
     navCross: d => `Steek over binnen ${d} m`,
     navShadeAhead: d => `Schaduw de komende ${d} m — blijf aan deze kant`,
     navSunAhead: (d, l) => `Zon over ${d} m — ${l} m lang`,
-    arrAt: s => `aankomst ${s}`,
+    arrAt: s => `⚑ <b>${s}</b>`,
     acTitle: "Je hebt de zon overleefd", acNightTitle: "De nacht was van jou",
     acStats: (km, min, sun, saved) => `${km} km · ${min} min · slechts ${sun} min volle zon${parseFloat(saved) > 0.2 ? `<br>Je vermeed ${saved} min t.o.v. de snelste route` : ""}`,
     acDone: "Klaar",
@@ -635,7 +637,7 @@ const STR = {
     myLocation: "🧛🏻 Mijn locatie",
     offRoute: m => `Je bent <b>${m} m</b> van de route`, backLine: "Terug naar de schaduwlijn 🧛🏻",
     arrived: "<b>Aangekomen.</b> 🧛🏻", crypt: "Terug naar de crypte.",
-    remain: (m, km) => `<b>${m} min</b> · ${km} km te gaan`,
+    remain: (m, km) => `<b>${m} min</b> · ${km} km`,
     ahead: (s, p) => `~${s} min volle zon te gaan · ${p}% gedaan`
   },
   ko: {
@@ -683,7 +685,7 @@ const STR = {
     navCross: d => `${d}m 앞에서 길을 건너세요`,
     navShadeAhead: d => `앞으로 ${d}m 그늘 — 이쪽으로 계속`,
     navSunAhead: (d, l) => `${d}m 앞 햇빛 — 길이 ${l}m`,
-    arrAt: s => `${s} 도착`,
+    arrAt: s => `⚑ <b>${s}</b>`,
     acTitle: "태양에서 살아남았습니다", acNightTitle: "밤은 당신의 것이었어요",
     acStats: (km, min, sun, saved) => `${km}km · ${min}분 · 직사광 단 ${sun}분${parseFloat(saved) > 0.2 ? `<br>최단 경로 대비 햇빛 ${saved}분 회피` : ""}`,
     acDone: "확인",
@@ -719,7 +721,7 @@ const STR = {
     myLocation: "🧛🏻 내 위치",
     offRoute: m => `경로에서 <b>${m}m</b> 벗어남`, backLine: "그늘 선으로 돌아가세요 🧛🏻",
     arrived: "<b>도착.</b> 🧛🏻", crypt: "관으로 귀환.",
-    remain: (m, km) => `<b>${m}분</b> · ${km}km 남음`,
+    remain: (m, km) => `<b>${m}분</b> · ${km}km`,
     ahead: (s, p) => `남은 직사광 약 ${s}분 · ${p}% 완료`
   },
   zh: {
@@ -767,7 +769,7 @@ const STR = {
     navCross: d => `${d} 米后过街`,
     navShadeAhead: d => `前方 ${d} 米均有阴影——保持这一侧`,
     navSunAhead: (d, l) => `${d} 米后进入阳光——长约 ${l} 米`,
-    arrAt: s => `${s} 到达`,
+    arrAt: s => `⚑ <b>${s}</b>`,
     acTitle: "你在阳光下幸存了", acNightTitle: "黑夜属于你",
     acStats: (km, min, sun, saved) => `${km} 公里 · ${min} 分钟 · 仅 ${sun} 分钟直射${parseFloat(saved) > 0.2 ? `<br>比最快路线少晒 ${saved} 分钟` : ""}`,
     acDone: "完成",
@@ -803,7 +805,7 @@ const STR = {
     myLocation: "🧛🏻 我的位置",
     offRoute: m => `你偏离路线 <b>${m} 米</b>`, backLine: "回到阴影线上 🧛🏻",
     arrived: "<b>到达。</b> 🧛🏻", crypt: "回到墓穴。",
-    remain: (m, km) => `<b>${m} 分钟</b> · 剩余 ${km} 公里`,
+    remain: (m, km) => `<b>${m} 分钟</b> · ${km} 公里`,
     ahead: (s, p) => `前方约 ${s} 分钟直射阳光 · 已完成 ${p}%`
   }
 };
@@ -1897,6 +1899,7 @@ $("clearBtn").addEventListener("click", () => {
   $("routes").innerHTML = ""; $("navCard").style.display = "none";
   hideErr();
   document.body.classList.add("homeUI"); // back to "where are you going?"
+  fixMapSize();
   status(t("cleared"));
 });
 
@@ -1919,7 +1922,8 @@ $("langNL").addEventListener("click", () => setLang("nl"));
 $("langKO").addEventListener("click", () => setLang("ko"));
 $("langZH").addEventListener("click", () => setLang("zh"));
 
-$("sheetHandle").addEventListener("click", () => document.body.classList.toggle("sheetCollapsed"));
+const fixMapSize = () => setTimeout(() => map.invalidateSize(), 360); // after CSS height transitions
+$("sheetHandle").addEventListener("click", () => { document.body.classList.toggle("sheetCollapsed"); fixMapSize(); });
 
 $("recenterBtn").addEventListener("click", () => {
   state.follow = true;
@@ -1932,6 +1936,7 @@ $("acBtn").addEventListener("click", () => {
   state.navMode = false;
   document.body.classList.remove("navModeUI");
   $("navToggle").textContent = t("startNav");
+  fixMapSize();
 });
 
 // Navigation mode: map takes over and follows you
@@ -1948,6 +1953,7 @@ $("navToggle").addEventListener("click", () => {
     setTimeout(drawSunMarker, 600); // the sun stays on stage during navigation
   }
   if (!state.navMode && window._pull) { map.removeLayer(window._pull); window._pull = null; }
+  fixMapSize();
   drawShadows(); // wash on when navigating, off when not
 });
 
@@ -1995,6 +2001,7 @@ async function plan() {
     status(state.buildings.length ? "" : t("noDataRoute"));
     refresh();
     if (window.innerWidth <= 760) document.body.classList.add("sheetCollapsed"); // give the map the stage
+    fixMapSize();
   } catch (err) {
     status("");
     showErr(err.message);
