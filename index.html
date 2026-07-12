@@ -214,6 +214,11 @@
   #navToggle { width: 100%; margin-top: 12px; padding: 14px; font-size: 0.82rem; letter-spacing: 0.2em; background: var(--brass); color: #1a1512; box-shadow: 0 3px 12px rgba(185,154,91,.4); }
   #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
   body.navModeUI .leaflet-top.leaflet-left, body.navModeUI .leaflet-control-zoom { display: none !important; }
+  /* iPhone safe areas: banner clears the notch, bar clears the home indicator */
+  body.navModeUI #navDir { top: calc(12px + env(safe-area-inset-top)); }
+  body.navModeUI #sidebar { bottom: calc(16px + env(safe-area-inset-bottom)); }
+  body.navModeUI #recenterBtn { bottom: calc(20px + env(safe-area-inset-bottom)); }
+  #errBanner { padding-top: calc(10px + env(safe-area-inset-top)); }
 
   /* Arrival card */
   #arriveCard, #briefCard { display: none; position: fixed; inset: 0; z-index: 9000; background: rgba(12,12,17,.55); align-items: center; justify-content: center; padding: 20px; }
@@ -242,7 +247,7 @@
   #sheetHandle { display: none; }
   @media (max-width: 760px) {
     body { flex-direction: column; }
-    #sidebar { width: 100%; min-width: 0; height: 55vh; order: 2; transition: height .3s ease; }
+    #sidebar { width: 100%; min-width: 0; height: 55vh; order: 2; transition: height .3s ease; padding-bottom: calc(22px + env(safe-area-inset-bottom)); }
     #map { height: 45vh; transition: height .3s ease; }
     #sheetHandle { display: block; text-align: center; padding: 2px 0 10px; cursor: pointer; }
     #sheetHandle span { display: inline-block; width: 44px; height: 5px; border-radius: 3px; background: var(--hairline); }
@@ -1430,9 +1435,24 @@ function enableCompass() {
   }
 }
 
+// A navigation app keeps the lights on: hold the screen awake while navigating
+async function keepAwake(on) {
+  try {
+    if (on && "wakeLock" in navigator) {
+      window._wake = await navigator.wakeLock.request("screen");
+    } else if (!on && window._wake) {
+      window._wake.release();
+      window._wake = null;
+    }
+  } catch (e) { /* older iOS: no wake lock — nothing we can do from the web */ }
+}
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.navMode) keepAwake(true); // re-grab after app switch
+});
+
 // Google's nav camera: tight zoom, you sit low in the frame, the road ahead gets the screen
 function navRecenter(ll, force) {
-  const z = force ? 18 : Math.max(map.getZoom(), 16);
+  const z = force ? 19 : Math.max(map.getZoom(), 17);
   const size = map.getSize();
   const off = Math.min(size.x, size.y) * 0.18;
   const h = (state.heading != null && !isNaN(state.heading)) ? state.heading * Math.PI / 180 : null;
@@ -1449,7 +1469,7 @@ function bearingBetween(a, b) {
 
 function startTracking() {
   if (!navigator.geolocation) return;
-  navigator.geolocation.watchPosition(p => {
+  const onFix = p => {
     const ll = [p.coords.latitude, p.coords.longitude];
     // heading: GPS course if present, else derive from movement
     let heading = p.coords.heading;
@@ -1471,9 +1491,11 @@ function startTracking() {
     }
     updateProgress();
     if (state.navMode && state.follow !== false) navRecenter(ll, false); // follow the Count, camera ahead
-  }, () => {
+  };
+  window._onFix = onFix;
+  navigator.geolocation.watchPosition(onFix, () => {
     if (firstFix) status(t("noLocation"));
-  }, { enableHighAccuracy: true, maximumAge: 3000 });
+  }, { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
 }
 
 function updateProgress() {
@@ -1934,6 +1956,8 @@ map.on("dragstart", () => { if (state.navMode) state.follow = false; }); // manu
 $("acBtn").addEventListener("click", () => {
   $("arriveCard").style.display = "none";
   state.navMode = false;
+  keepAwake(false);
+  if (window._navPoll) { clearInterval(window._navPoll); window._navPoll = null; }
   document.body.classList.remove("navModeUI");
   $("navToggle").textContent = t("startNav");
   fixMapSize();
@@ -1946,13 +1970,24 @@ $("navToggle").addEventListener("click", () => {
   $("navToggle").textContent = state.navMode ? t("endNav") : t("startNav");
   if (state.navMode) {
     state.follow = true;
+    keepAwake(true);
     enableCompass();
     if (window.innerWidth <= 760) document.body.classList.add("sheetCollapsed");
     if (state.pos) navRecenter(state.pos, true);
+    if (!window._navPoll) window._navPoll = setInterval(() => {
+      if (navigator.geolocation && window._onFix)
+        navigator.geolocation.getCurrentPosition(window._onFix, () => {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 6000 });
+    }, 3000);
     setTimeout(maybeShadeArea, 400);
     setTimeout(drawSunMarker, 600); // the sun stays on stage during navigation
   }
-  if (!state.navMode && window._pull) { map.removeLayer(window._pull); window._pull = null; }
+  if (!state.navMode) {
+    keepAwake(false);
+    if (window._pull) { map.removeLayer(window._pull); window._pull = null; }
+    if (window._navPoll) { clearInterval(window._navPoll); window._navPoll = null; }
+    document.body.classList.remove("sheetCollapsed"); // back to the search panel
+    $("sidebar").scrollTop = 0;
+  }
   fixMapSize();
   drawShadows(); // wash on when navigating, off when not
 });
@@ -2116,6 +2151,15 @@ setInterval(() => {
 setTimeout(() => { const sp = $("splash"); if (sp) sp.remove(); }, 2900);
 document.body.classList.add("homeUI"); // launch like Google Maps: one question
 applyStatic();
+try { // your last destination waits in the field
+  const rec = JSON.parse(localStorage.getItem("drac_recents") || "[]");
+  if (rec[0]) {
+    $("endInput").value = rec[0].label;
+    $("endInput").dataset.geo = rec[0].label;
+    state.end = L.latLng(rec[0].lat, rec[0].lng);
+    $("endClear").style.display = "block";
+  }
+} catch (e) {}
 setTime(new Date());
 status(t("locating"));
 startTracking();
