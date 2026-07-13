@@ -226,6 +226,8 @@
   .pulseMe { animation: startPulse 1.2s ease-out 2; }
   @keyframes startPulse { 0% { box-shadow: 0 0 0 0 rgba(185,154,91,.6); } 100% { box-shadow: 0 0 0 16px rgba(185,154,91,0); } }
   body.navModeUI .leaflet-top.leaflet-left, body.navModeUI .leaflet-control-zoom { display: none !important; }
+  /* zoom +/− sits below the iOS status bar, not under the clock */
+  .leaflet-top.leaflet-left .leaflet-control-zoom { margin-top: calc(14px + env(safe-area-inset-top, 0px)); }
   /* iPhone safe areas: banner clears the notch, bar clears the home indicator */
   body.navModeUI #navDir { top: calc(12px + env(safe-area-inset-top)); }
   body.navModeUI #sidebar { bottom: calc(16px + env(safe-area-inset-bottom)); }
@@ -1373,7 +1375,15 @@ function renderMapKey() {
   if (!el) return;
   el.innerHTML = `<span><i style="background:#2e2e38;border:1px solid #8a8478"></i>${t("lgShadow")}</span><span><i style="background:#e3a857"></i>${t("lgSun")}</span><span><i style="background:#7d9ab8"></i>${t("lgOvercast")}</span>`;
   el.style.display = (ready() || state.navMode) ? "flex" : "none";
-  el.style.marginBottom = state.navMode ? (($("navCard").offsetHeight || 96) + 34) + "px" : "4px";
+  if (state.navMode) {
+    // measure the real bottom bar (fixed #sidebar) so the legend always clears it
+    const sb = document.getElementById("sidebar");
+    const r = sb ? sb.getBoundingClientRect() : null;
+    const m = (r && r.top > 0 && r.top < window.innerHeight) ? Math.round(window.innerHeight - r.top) + 14 : 150;
+    el.style.marginBottom = Math.max(70, m) + "px";
+  } else {
+    el.style.marginBottom = "4px";
+  }
 }
 
 function drawSunMarker() {
