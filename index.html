@@ -9,6 +9,12 @@
 <meta name="apple-mobile-web-app-title" content="Dracula">
 <title>Dracula — Walk in the Shadows</title>
 <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 110"><path fill="%230c0c11" d="M4 10 Q18 20 34 54 Q50 52 68 68 Q82 62 96 72 Q104 68 112 76 Q116 84 120 96 Q124 84 128 76 Q136 68 144 72 Q158 62 172 68 Q190 52 206 54 Q222 20 236 10 C226 8 210 13 196 14 C182 16 170 24 160 34 C152 40 144 40 136 26 L136 25 C138 12 135 4 131 6 Q127 12 125 18 Q120 14 115 18 Q113 12 109 6 C105 4 102 12 104 25 L104 26 C96 40 88 40 80 34 C70 24 58 16 44 14 C30 13 14 8 4 10 Z"/></svg>'>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com">
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com">
+<link rel="preconnect" href="https://routing.openstreetmap.de">
+<link rel="preconnect" href="https://overpass-api.de">
+<link rel="preconnect" href="https://api.open-meteo.com">
+<link rel="preconnect" href="https://photon.komoot.io">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
@@ -31,8 +37,8 @@
     --sigHover: #1e1e26;
     /* Semantic light conditions */
     --c-night: #26304f;        /* night — midnight blue, unmistakably not graphite */
-    --c-shade: #63636f;        /* cast shadow as it appears on the map */
-    --c-overcast: #93a1ad;     /* clouds shielding you — pewter */
+    --c-shade: #2e2e38;        /* the shadow — same ink as the route line */
+    --c-overcast: #7d9ab8;     /* clouds shielding you — pewter */
     --c-sun: #e3a857;          /* direct sun — amber */
     --c-scorch: #c23b22;       /* super hot / extreme UV */
   }
@@ -175,6 +181,10 @@
     border-left: 10px solid transparent; border-right: 10px solid transparent; border-bottom: 24px solid rgba(185,154,91,.95);
     transform-origin: 50% calc(100% + 6px); border-radius: 4px; filter: drop-shadow(0 1px 2px rgba(0,0,0,.4)); }
   .sunIcon { filter: drop-shadow(0 2px 6px rgba(227,168,87,.6)); }
+  .mapKey { background: rgba(20,19,26,.85); color: #e9e3d7; padding: 6px 11px; border-radius: 11px; font: 600 10px Arial, sans-serif; display: flex; gap: 11px; letter-spacing: .04em; }
+  .mapKey span { display: flex; align-items: center; gap: 5px; }
+  .mapKey i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
   @keyframes pulse { 0% { transform: scale(.6); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
 
   #errBanner { display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 9999; background: var(--blood-deep); color: var(--bone); padding: 10px 16px; font: 600 14px Arial, sans-serif; }
@@ -213,6 +223,8 @@
   body.navModeUI #recenterBtn { display: flex; position: fixed; right: 14px; bottom: 20px; z-index: 1600; width: 48px; height: 48px; border-radius: 50%; background: var(--card); color: var(--text); border: 1px solid var(--hairline); font-size: 1.5rem; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,.3); padding: 0; min-height: 0; }
   #navToggle { width: 100%; margin-top: 12px; padding: 14px; font-size: 0.82rem; letter-spacing: 0.2em; background: var(--brass); color: #1a1512; box-shadow: 0 3px 12px rgba(185,154,91,.4); }
   #navToggle:hover { filter: brightness(1.08); background: var(--brass); }
+  .pulseMe { animation: startPulse 1.2s ease-out 2; }
+  @keyframes startPulse { 0% { box-shadow: 0 0 0 0 rgba(185,154,91,.6); } 100% { box-shadow: 0 0 0 16px rgba(185,154,91,0); } }
   body.navModeUI .leaflet-top.leaflet-left, body.navModeUI .leaflet-control-zoom { display: none !important; }
   /* iPhone safe areas: banner clears the notch, bar clears the home indicator */
   body.navModeUI #navDir { top: calc(12px + env(safe-area-inset-top)); }
@@ -442,10 +454,10 @@ const COLOR_SHADE = "#2e2e38";
 const COLOR_BUILDING = "#8d8a96";
 const COLOR_SUN = "#e3a857";
 const COLOR_SCORCH = "#c23b22";
-const COLOR_OVERCAST = "#93a1ad";
+const COLOR_OVERCAST = "#7d9ab8";
 
 // ---------- Map ----------
-const map = L.map("map", { preferCanvas: true }).setView([40.7580, -73.9855], 15);
+const map = L.map("map", { preferCanvas: true, zoomSnap: 0.5, zoomDelta: 0.5 }).setView([40.7580, -73.9855], 15);
 let tileErrors = 0;
 const baseTiles = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
   attribution: "&copy; OpenStreetMap &copy; CARTO", maxZoom: 20
@@ -466,9 +478,10 @@ const state = {
   start: null, end: null,
   routes: [], buildings: [], trees: [], crosswalks: [], quads: [], treeShadows: [],
   when: new Date(), weather: null, bestIdx: 0, busy: false,
-  pos: null, areaBounds: null, navigating: false,
+  pos: null, areaBounds: null, areaRects: [], navigating: false,
   selIdx: null, selManual: false,
-  mode: "foot", heading: null, lastPos: null
+  mode: "foot", heading: null, lastPos: null,
+  shadeDirty: true, viewDirty: true, paintDirty: true
 };
 const speed = () => state.mode === "bike" ? 4.2 : 1.4; // m/s
 
@@ -517,7 +530,7 @@ const STR = {
     sunriseIn: (h, m) => `Sunrise in ${h ? h + "h " : ""}${m}m — enjoy it while it lasts`,
     moonLabel: p => `Moon · ${p}% lit`,
     moonTip: "The moon keeps watch — no UV, all shade, walk anywhere",
-    startNav: "Start", endNav: "End",
+    startNav: "▶  Start", endNav: "End",
     chipNight: "☾ no sun tonight", chipShade: "☂ shade all the way", chipSun: m => `☀ ${m} min of sun ahead`, chipCloud: m => `☁ ${m} min unshaded`,
     navCross: d => `Cross the street in ${d} m`,
     navShadeAhead: d => `Shade for the next ${d} m — stay on this side`,
@@ -601,7 +614,7 @@ const STR = {
     sunriseIn: (h, m) => `Zonsopkomst over ${h ? h + "u " : ""}${m}m — geniet zolang het duurt`,
     moonLabel: p => `Maan · ${p}% verlicht`,
     moonTip: "De maan waakt — geen UV, alles schaduw, loop waar je wilt",
-    startNav: "Start", endNav: "Stop",
+    startNav: "▶  Start", endNav: "Stop",
     chipNight: "☾ geen zon vannacht", chipShade: "☂ schaduw de hele weg", chipSun: m => `☀ ${m} min zon te gaan`, chipCloud: m => `☁ ${m} min onbeschut`,
     navCross: d => `Steek over binnen ${d} m`,
     navShadeAhead: d => `Schaduw de komende ${d} m — blijf aan deze kant`,
@@ -685,7 +698,7 @@ const STR = {
     sunriseIn: (h, m) => `일출까지 ${h ? h + "시간 " : ""}${m}분 — 지금을 즐기세요`,
     moonLabel: p => `달 · ${p}% 밝음`,
     moonTip: "달이 지켜봅니다 — UV 없음, 어디든 걸으세요",
-    startNav: "시작", endNav: "종료",
+    startNav: "▶  시작", endNav: "종료",
     chipNight: "☾ 밤 — 해 없음", chipShade: "☂ 끝까지 그늘", chipSun: m => `☀ 앞으로 햇빛 ${m}분`, chipCloud: m => `☁ 노출 ${m}분`,
     navCross: d => `${d}m 앞에서 길을 건너세요`,
     navShadeAhead: d => `앞으로 ${d}m 그늘 — 이쪽으로 계속`,
@@ -769,7 +782,7 @@ const STR = {
     sunriseIn: (h, m) => `距日出 ${h ? h + "小时" : ""}${m}分——且行且珍惜`,
     moonLabel: p => `月亮 · ${p}% 明亮`,
     moonTip: "月亮守望——没有紫外线，随处可走",
-    startNav: "开始", endNav: "结束",
+    startNav: "▶  开始", endNav: "结束",
     chipNight: "☾ 夜晚无阳光", chipShade: "☂ 全程阴凉", chipSun: m => `☀ 前方日晒 ${m} 分钟`, chipCloud: m => `☁ 无遮挡 ${m} 分钟`,
     navCross: d => `${d} 米后过街`,
     navShadeAhead: d => `前方 ${d} 米均有阴影——保持这一侧`,
@@ -841,6 +854,7 @@ function applyStatic() {
 
 function setLang(l) {
   state.lang = l;
+  state.viewDirty = true;
   applyStatic();
   refresh();
 }
@@ -868,6 +882,10 @@ const isOvercast = () => { const c = currentCloud(); return c != null && c >= 85
 
 // ---------- Shadows ----------
 function computeShadows() {
+  if (!state.shadeDirty && state.grid) return; // sun, city and time unchanged — skip the whole rebuild
+  state.shadeDirty = false;
+  state.viewDirty = true;
+  state.paintDirty = true;
   state.quads = [];
   const sun = sunAt(state.when);
   if (sun.altitude <= 0.01) return;
@@ -963,7 +981,7 @@ const ShadowCanvas = L.Layer.extend({
     ctx.clearRect(0, 0, this._c.width, this._c.height);
     if (state.navMode && !isNight() && state.quads.length) {
       // navigating: paint the shade itself, live, wherever you are
-      ctx.globalAlpha = 0.26;
+      ctx.globalAlpha = 0.32;
       ctx.fillStyle = "#3a3a46";
       ctx.beginPath();
       for (const s of state.quads) {
@@ -994,7 +1012,11 @@ const ShadowCanvas = L.Layer.extend({
 const shadowPaint = new ShadowCanvas();
 shadowPaint.addTo(map); // paints only the city's trees
 
-function drawShadows() { shadowPaint.redraw(); }
+function drawShadows() {
+  if (!state.paintDirty) return; // pan/zoom repaints arrive via the canvas's own moveend hook
+  state.paintDirty = false;
+  shadowPaint.redraw();
+}
 
 // ---------- Data ----------
 async function safeFetch(url, opts, serviceName) {
@@ -1121,7 +1143,11 @@ function mergeCityData(f) {
     bl = bl.filter(x => keep.contains(x.pts[0]));
     tl = tl.filter(x => keep.contains([x.lat, x.lon]));
     cl = cl.filter(x => keep.contains([x.lat, x.lon]));
-    state.areaBounds = null;
+    state.areaRects = [];
+  }
+  if (bl.length !== state.buildings.length || tl.length !== state.trees.length) {
+    state.shadeDirty = true;
+    state.paintDirty = true;
   }
   state.buildings = bl;
   state.trees = tl;
@@ -1148,17 +1174,17 @@ async function maybeShadeArea() {
   if (state.busy) return;
   if (map.getZoom() < AREA_SHADE_MIN_ZOOM) return;
   const b = map.getBounds();
-  if (state.areaBounds && state.areaBounds.contains(b)) return;
+  if (state.areaRects.some(rr => rr.contains(b))) return; // only skip if THIS view was truly fetched
   try {
     state.busy = true;
     status(t("readingShadows"));
     const fetched = await fetchBuildings(b.pad(0.15));
     mergeCityData(fetched);
     if (fetched.truncated) {
-      state.areaBounds = null; // dense area — keep fetching as the view narrows
-      status(t("dense"));
+      status(t("dense")); // dense: never mark covered — refetch as the view narrows
     } else {
-      state.areaBounds = state.areaBounds ? state.areaBounds.extend(b.pad(0.15)) : b.pad(0.15);
+      state.areaRects.push(b.pad(0.15));
+      if (state.areaRects.length > 24) state.areaRects.shift();
       status(state.buildings.length ? "" : t("noData"));
     }
     refresh();
@@ -1274,15 +1300,44 @@ function attachAutocomplete(which) {
     timer = setTimeout(async () => {
       try {
         const c = map.getCenter();
-        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=5&lat=${c.lat.toFixed(4)}&lon=${c.lng.toFixed(4)}`, { signal: AbortSignal.timeout(8000) });
+        const r = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lat=${c.lat.toFixed(4)}&lon=${c.lng.toFixed(4)}&zoom=14&location_bias_scale=0.4`, { signal: AbortSignal.timeout(8000) });
         if (!r.ok) return;
         const j = await r.json();
         box.innerHTML = "";
-        if (!j.features || !j.features.length) { box.style.display = "none"; return; }
-        for (const f of j.features) {
+        // places you've been match first — Dracula remembers
+        let hits = [];
+        if (which === "end") {
+          try {
+            const rec = JSON.parse(localStorage.getItem("drac_recents") || "[]");
+            const ql = q.toLowerCase();
+            hits = rec.filter(x => x.label.toLowerCase().includes(ql)).slice(0, 2);
+          } catch (e) {}
+        }
+        for (const it of hits) {
+          const d = document.createElement("div");
+          d.textContent = "↺ " + it.label;
+          d.addEventListener("mousedown", ev => {
+            ev.preventDefault();
+            setPoint("end", L.latLng(it.lat, it.lng), it.label);
+            box.style.display = "none";
+            status(t("destSet"));
+            if (state.start || state.pos) plan();
+          });
+          box.appendChild(d);
+        }
+        if ((!j.features || !j.features.length) && !hits.length) { box.style.display = "none"; return; }
+        const seen = new Set(hits.map(x => x.label));
+        // we travel on foot and by bike: nearest matches first, far continents need not apply
+        const org = state.pos ? { lat: state.pos[0], lng: state.pos[1] } : map.getCenter();
+        let feats = (j.features || []).map(f => ({ f, d: dist([org.lat, org.lng], [f.geometry.coordinates[1], f.geometry.coordinates[0]]) }));
+        feats.sort((a, b) => a.d - b.d);
+        const near = feats.filter(x => x.d < 80000);
+        feats = (near.length ? near : feats).slice(0, 5);
+        for (const { f, d: dKm } of feats) {
           const p = f.properties;
           const main = p.name || [p.street, p.housenumber].filter(Boolean).join(" ") || "";
-          const sub = [p.city || p.town || p.village, p.state, p.country].filter(Boolean).join(", ");
+          if (seen.has(main + (p.city ? ", " + p.city : ""))) continue;
+          const sub = [(dKm / 1000).toFixed(dKm < 10000 ? 1 : 0) + " km", p.city || p.town || p.village, p.country].filter(Boolean).join(" · ");
           const d = document.createElement("div");
           d.innerHTML = `${main}<small>${sub}</small>`;
           d.addEventListener("mousedown", ev => {
@@ -1308,6 +1363,18 @@ attachAutocomplete("end");
 
 // ---------- Sun on the map: disc at the sun's direction + light ray across the view ----------
 const sunLayer = L.layerGroup().addTo(map);
+
+// mini legend that lives on the map — visible wherever the colors are
+const keyCtl = L.control({ position: "bottomleft" });
+keyCtl.onAdd = () => { const d = L.DomUtil.create("div", "mapKey"); d.id = "mapKey"; d.style.display = "none"; return d; };
+keyCtl.addTo(map);
+function renderMapKey() {
+  const el = document.getElementById("mapKey");
+  if (!el) return;
+  el.innerHTML = `<span><i style="background:#2e2e38;border:1px solid #8a8478"></i>${t("lgShadow")}</span><span><i style="background:#e3a857"></i>${t("lgSun")}</span><span><i style="background:#7d9ab8"></i>${t("lgOvercast")}</span>`;
+  el.style.display = (ready() || state.navMode) ? "flex" : "none";
+  el.style.marginBottom = state.navMode ? (($("navCard").offsetHeight || 96) + 34) + "px" : "4px";
+}
 
 function drawSunMarker() {
   sunLayer.clearLayers();
@@ -1371,6 +1438,13 @@ function drawSunMarker() {
       <path d="${corona}" fill="${sunCol}"${veiled ? ' opacity=".75"' : ""}/>
       <circle cx="24" cy="24" r="14.5" fill="#fffdf6"/>
       <circle cx="24" cy="24" r="12" fill="${sunCol}"/>
+      <g fill="#5f3408">
+        <path d="M17.5 20.5 L22.5 22 L18.6 24 Q17.2 22.3 17.5 20.5 Z"/>
+        <path d="M30.5 20.5 L25.5 22 L29.4 24 Q30.8 22.3 30.5 20.5 Z"/>
+        <path d="M20 27 Q24 30.2 28 26.6 Q24 32.6 20 27 Z"/>
+        <path d="M21.4 28.3 L22.1 30.6 L23 28.8 Z"/>
+        <path d="M26.6 27.9 L25.9 30.3 L25 28.5 Z"/>
+      </g>
     </svg>
     <div style="font:700 10.5px Arial,sans-serif;color:#2e2e38;margin-top:2px">${label}</div>
     ${sub ? `<div style="font:600 10px Arial,sans-serif;color:#6b6353;margin-top:1px">${sub}</div>` : ""}
@@ -1452,7 +1526,7 @@ document.addEventListener("visibilitychange", () => {
 
 // Google's nav camera: tight zoom, you sit low in the frame, the road ahead gets the screen
 function navRecenter(ll, force) {
-  const z = force ? 19 : Math.max(map.getZoom(), 17);
+  const z = force ? 19.5 : Math.max(map.getZoom(), 17.5);
   const size = map.getSize();
   const off = Math.min(size.x, size.y) * 0.18;
   const h = (state.heading != null && !isNaN(state.heading)) ? state.heading * Math.PI / 180 : null;
@@ -1486,7 +1560,7 @@ function startTracking() {
       firstFix = false;
       map.setView(ll, 16);
       status(t("foundYou"));
-      fetchWeather().then(w => { if (w) { state.weather = w; renderWeather(); refresh(); maybeShowBrief(); } });
+      fetchWeather().then(w => { if (w) { state.weather = w; state.viewDirty = true; renderWeather(); refresh(); maybeShowBrief(); } });
       updateSliderGradient();
     }
     updateProgress();
@@ -1609,6 +1683,7 @@ function updateProgress() {
   const banner = turnRow ? `<div class="turnRow">${turnRow}</div>` + (dir ? `<div class="subRow">${dir}</div>` : "") : "";
   $("navDir").innerHTML = banner;
   $("navDir").style.display = banner ? "block" : "none";
+  renderMapKey(); // legend rides just above the live bar, whatever its height
   $("navBar").style.width = Math.round(covered / r.distance * 100) + "%";
 }
 
@@ -1640,7 +1715,11 @@ function drawRoutes() {
     }
     // faint centerline for context; the solid line walks the chosen sidewalk
     L.polyline(r.coords, { color: "#9b96a4", weight: 2, opacity: 0.5, dashArray: "4 6" }).addTo(routeLayer);
-    const pt = i => (r.sides[i] === "L" ? r.offL[i] : r.offR[i]);
+    const pt = i => { // shade is sampled at the sidewalk; the line renders halfway so it hugs the road
+      const o = r.sides[i] === "L" ? r.offL[i] : r.offR[i];
+      const c0 = r.samples[i];
+      return [(o[0] + c0[0]) / 2, (o[1] + c0[1]) / 2];
+    };
     const sunnyAt = i => { const p = pt(i); return !inShade(p[0], p[1]); };
     let run = [pt(0)], runSunny = sunnyAt(0), runSide = r.sides[0];
     const flush = () => {
@@ -1777,6 +1856,7 @@ function renderWeather() {
 
 function refresh() {
   renderSunInfo();
+  renderMapKey();
   drawSunMarker();
   updateSliderGradient();
   const nightNow = isNight();
@@ -1784,7 +1864,8 @@ function refresh() {
   document.body.classList.toggle("nightMode", nightNow);
   computeShadows();
   drawShadows();
-  if (ready()) {
+  if (ready() && state.viewDirty) {
+    state.viewDirty = false;
     scoreRoutes();
     drawRoutes();
     renderPanel();
@@ -1796,6 +1877,7 @@ function refresh() {
 // ---------- Interaction ----------
 function setTime(d) {
   state.when = d;
+  state.shadeDirty = true;
   $("timeLabel").textContent = fmtTime(d);
   $("timeSlider").value = d.getHours() * 60 + d.getMinutes();
   $("nowBtn").classList.toggle("timeOff", Math.abs(d - new Date()) > 6 * 60000); // glows when you've left "now"
@@ -1977,6 +2059,7 @@ $("navToggle").addEventListener("click", () => {
     if (!window._navPoll) window._navPoll = setInterval(() => {
       if (navigator.geolocation && window._onFix)
         navigator.geolocation.getCurrentPosition(window._onFix, () => {}, { enableHighAccuracy: true, maximumAge: 0, timeout: 6000 });
+      maybeShadeArea(); // keep the shade painted around wherever you've wandered
     }, 3000);
     setTimeout(maybeShadeArea, 400);
     setTimeout(drawSunMarker, 600); // the sun stays on stage during navigation
@@ -2026,16 +2109,21 @@ async function plan() {
     status(t("casting")(state.routes.length));
     const fetched = await fetchBuildings(bounds);
     mergeCityData(fetched);
-    if (!fetched.truncated)
-      state.areaBounds = state.areaBounds ? state.areaBounds.extend(bounds.pad(0.15)) : bounds.pad(0.15);
+    if (!fetched.truncated) {
+      state.areaRects.push(bounds.pad(0.15));
+      if (state.areaRects.length > 24) state.areaRects.shift();
+    }
 
     status(t("readingSky"));
     state.weather = await fetchWeather();
+    state.viewDirty = true;
     maybeShowBrief();
 
     status(state.buildings.length ? "" : t("noDataRoute"));
     refresh();
     if (window.innerWidth <= 760) document.body.classList.add("sheetCollapsed"); // give the map the stage
+    $("navToggle").classList.add("pulseMe");
+    setTimeout(() => $("navToggle").classList.remove("pulseMe"), 3000);
     fixMapSize();
   } catch (err) {
     status("");
